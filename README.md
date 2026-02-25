@@ -164,6 +164,361 @@ See [`plugins/README.md`](plugins/README.md) for the full list with installation
 | **Plugin Ecosystem** | 9 plugins for dev workflows, docs, and ML research |
 | **Bypass Permissions** | All tools auto-allowed for maximum speed (opt-in) |
 
+## Best Practices: Software Development Workflow
+
+This section describes how all the tools in this configuration work together across every phase of development. Each phase shows which tools, skills, MCP servers, and rules are activated.
+
+### Overview: The Full Pipeline
+
+```
+ Feature Request / Bug Report
+          │
+          ▼
+ ┌─────────────────┐
+ │  1. PLANNING     │  Skills: brainstorming, writing-plans, plan
+ │                   │  Mode: Plan Mode (Shift+Tab ×2)
+ │                   │  MCP: Context7 (lookup API docs)
+ └────────┬──────────┘
+          ▼
+ ┌─────────────────┐
+ │  2. TDD          │  Skills: test-driven-development, tdd, tdd-workflow
+ │  Write tests     │  Rules: testing.md (80% coverage)
+ │  first           │  Agent: tdd-guide
+ └────────┬──────────┘
+          ▼
+ ┌─────────────────┐
+ │  3. IMPLEMENT    │  Skills: coding-standards, *-patterns
+ │                   │  Rules: coding-style.md, patterns.md
+ │                   │  MCP: Context7 (live docs)
+ └────────┬──────────┘
+          ▼
+ ┌─────────────────┐
+ │  4. REVIEW       │  Skills: requesting-code-review, security-review
+ │                   │  Skills: python-review, go-review
+ │                   │  Rules: security.md
+ └────────┬──────────┘
+          ▼
+ ┌─────────────────┐
+ │  5. E2E TEST     │  Skills: e2e, webapp-testing
+ │                   │  MCP: Playwright (browser automation)
+ └────────┬──────────┘
+          ▼
+ ┌─────────────────┐
+ │  6. COMMIT & PR  │  Rules: git-workflow.md
+ │                   │  MCP: GitHub (create PR, manage issues)
+ │                   │  Skill: verification-before-completion
+ └────────┬──────────┘
+          ▼
+        Done ✓
+```
+
+---
+
+### Phase 1: Planning
+
+> "Measure twice, cut once." Never jump into code for non-trivial tasks.
+
+**When**: Any task with 3+ steps, multi-file changes, or architectural decisions.
+
+**How**:
+
+```
+You: "Add user authentication with JWT"
+
+Claude auto-activates:
+  1. /brainstorming          → Explore approaches (session vs JWT vs OAuth)
+  2. /writing-plans          → Structured plan with phases and risks
+  3. Plan Mode (Shift+Tab)   → Read-only exploration, no accidental edits
+  4. Context7 MCP            → Pull latest docs for chosen libraries
+```
+
+**Tools activated**:
+
+| Tool | Role |
+|------|------|
+| `superpowers:brainstorming` | Generate and evaluate multiple approaches before committing |
+| `superpowers:writing-plans` | Create step-by-step plan with checkpoints |
+| `everything-claude-code:plan` | Restate requirements, assess risks, wait for confirmation |
+| **Context7 MCP** | Look up current API docs for frameworks (e.g., NextAuth, Passport) |
+| `rules/common/agents.md` | Dispatch parallel subagents for research if needed |
+
+**Anti-pattern**: Jumping straight to `vim` or `code .` without a plan.
+
+---
+
+### Phase 2: Test-Driven Development
+
+> Write the test first. Watch it fail. Then make it pass.
+
+**When**: Every feature and every bug fix.
+
+**How**:
+
+```
+Claude follows the TDD cycle:
+
+  RED    → Write a failing test that defines the expected behavior
+  GREEN  → Write minimal code to make the test pass
+  REFACTOR → Clean up while keeping tests green
+  VERIFY → Check coverage ≥ 80%
+```
+
+**Tools activated**:
+
+| Tool | Role |
+|------|------|
+| `superpowers:test-driven-development` | Enforces write-test-first discipline |
+| `everything-claude-code:tdd` | Scaffold interfaces → generate tests → implement |
+| `everything-claude-code:tdd-workflow` | Full TDD lifecycle management |
+| `everything-claude-code:python-testing` | pytest fixtures, parametrize, mocking |
+| `everything-claude-code:golang-testing` | Table-driven tests, race detection |
+| `rules/common/testing.md` | 80% coverage minimum, test isolation |
+| **Language-specific rules** | `python/testing.md`, `typescript/testing.md`, `golang/testing.md` |
+
+**Anti-pattern**: Writing implementation first, then retroactively adding tests.
+
+---
+
+### Phase 3: Implementation
+
+> Immutability, small files, small functions. Let Context7 handle the docs.
+
+**When**: After tests are written (Phase 2) and the plan is approved (Phase 1).
+
+**How**:
+
+```
+Claude writes code following:
+  - Immutable data patterns (no mutation)
+  - Small files (200-400 lines, 800 max)
+  - Small functions (<50 lines)
+  - Schema-based validation at boundaries
+  - Context7 for latest API usage
+```
+
+**Tools activated**:
+
+| Tool | Role |
+|------|------|
+| `rules/common/coding-style.md` | Immutability, file organization, error handling |
+| `everything-claude-code:coding-standards` | Universal best practices |
+| `everything-claude-code:python-patterns` | Pythonic idioms, type hints |
+| `everything-claude-code:golang-patterns` | Idiomatic Go, interfaces, error wrapping |
+| `everything-claude-code:frontend-patterns` | React, Next.js, state management |
+| `everything-claude-code:backend-patterns` | API design, database optimization |
+| `everything-claude-code:postgres-patterns` | Query optimization, indexing, schema design |
+| **Context7 MCP** | Real-time documentation lookup — never use outdated APIs |
+| `rules/common/patterns.md` | Repository pattern, API response envelope |
+
+**Key rule**: If you're unsure about an API, ask Context7 before guessing.
+
+---
+
+### Phase 4: Code Review & Security
+
+> Review immediately after writing. Don't wait for PR.
+
+**When**: After any code is written or modified.
+
+**How**:
+
+```
+Claude auto-triggers after implementation:
+  1. Code review    → Style, correctness, edge cases
+  2. Security scan  → OWASP Top 10, secrets, injection
+  3. Language review → Python/Go/TS-specific checks
+```
+
+**Tools activated**:
+
+| Tool | Role |
+|------|------|
+| `superpowers:requesting-code-review` | Comprehensive review against requirements |
+| `everything-claude-code:security-review` | Auth, input validation, secrets, XSS, CSRF |
+| `everything-claude-code:python-review` | PEP 8, type hints, security, Pythonic idioms |
+| `everything-claude-code:go-review` | Concurrency safety, error handling, idiomatic Go |
+| `rules/common/security.md` | Pre-commit security checklist |
+| **Language-specific security** | `python/security.md` (bandit), `golang/security.md` (gosec) |
+
+**Severity handling**:
+- **CRITICAL/HIGH** → Fix immediately, no exceptions
+- **MEDIUM** → Fix when possible
+- **LOW** → Note for future cleanup
+
+**Anti-pattern**: Skipping review because "it's a small change."
+
+---
+
+### Phase 5: E2E Testing
+
+> Trust, but verify. In a real browser.
+
+**When**: Critical user flows, UI changes, API integration points.
+
+**How**:
+
+```
+Claude uses Playwright MCP to:
+  1. Navigate to the page
+  2. Fill forms, click buttons
+  3. Assert expected outcomes
+  4. Capture screenshots as evidence
+```
+
+**Tools activated**:
+
+| Tool | Role |
+|------|------|
+| `everything-claude-code:e2e` | Generate Playwright test journeys, run them, capture artifacts |
+| `document-skills:webapp-testing` | Interact with and verify local web apps |
+| **Playwright MCP** | Direct browser control — click, type, screenshot, assert |
+| `rules/typescript/testing.md` | Playwright as E2E framework |
+
+**Anti-pattern**: Only testing with unit tests and hoping the UI works.
+
+---
+
+### Phase 6: Git Workflow & PR
+
+> Conventional commits. Comprehensive PRs. Verify before claiming done.
+
+**When**: Code is reviewed, tests pass, ready to ship.
+
+**How**:
+
+```
+1. Verify everything works        → /verification-before-completion
+2. Stage specific files            → git add (never git add -A blindly)
+3. Commit with conventional format → feat: / fix: / refactor: / test:
+4. Push and create PR              → GitHub MCP handles it
+5. PR includes summary + test plan
+```
+
+**Tools activated**:
+
+| Tool | Role |
+|------|------|
+| `superpowers:verification-before-completion` | Run tests, check logs, prove correctness before committing |
+| `superpowers:finishing-a-development-branch` | Decide: merge, squash, or rebase |
+| `superpowers:using-git-worktrees` | Isolate feature work from main workspace |
+| `rules/common/git-workflow.md` | Commit format, PR checklist, branch strategy |
+| **GitHub MCP** | Create PR, link issues, manage reviews — without leaving the terminal |
+
+**Commit format**:
+```
+<type>: <description>
+
+Types: feat, fix, refactor, docs, test, chore, perf, ci
+```
+
+---
+
+### Phase 7: Debugging
+
+> Reproduce → Isolate → Fix → Verify. No guessing.
+
+**When**: Any bug, test failure, or unexpected behavior.
+
+**How**:
+
+```
+Claude follows systematic debugging:
+  1. Reproduce the issue with a minimal test case
+  2. Form hypothesis about root cause
+  3. Add diagnostic logging/assertions
+  4. Fix the root cause (not symptoms)
+  5. Verify fix with the reproduction test
+  6. Check for similar issues elsewhere
+```
+
+**Tools activated**:
+
+| Tool | Role |
+|------|------|
+| `superpowers:systematic-debugging` | Structured debugging workflow — no guessing |
+| `everything-claude-code:go-build` | Fix Go build errors, vet warnings incrementally |
+| `rules/common/coding-style.md` | Error handling patterns |
+| **Playwright MCP** | Debug UI issues visually with screenshots |
+| **Context7 MCP** | Look up correct API usage when the bug is "wrong API call" |
+
+**Anti-pattern**: Changing random things until tests pass.
+
+---
+
+### Parallel Execution
+
+> Independent tasks should run concurrently, not sequentially.
+
+**When**: 2+ tasks with no shared state or sequential dependency.
+
+**How**:
+
+```
+Claude dispatches parallel subagents:
+  Agent 1: Security review of auth module
+  Agent 2: Unit tests for payment service
+  Agent 3: E2E test for checkout flow
+  ─── all run simultaneously ───
+  Results merged when all complete
+```
+
+**Tools activated**:
+
+| Tool | Role |
+|------|------|
+| `superpowers:dispatching-parallel-agents` | Identify and launch independent parallel tasks |
+| `rules/common/agents.md` | Agent orchestration patterns |
+| `settings.json` → `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` | Enable multi-agent teams |
+
+---
+
+### Cross-Session Learning
+
+> Every correction makes the system permanently smarter.
+
+**How it works**:
+
+```
+Session 1: User corrects Claude → lesson saved to memory/lessons.md
+Session 2: Claude reads lessons.md at start → avoids same mistake
+Session N: Pattern confirmed across sessions → rule promoted to CLAUDE.md
+```
+
+**Tools activated**:
+
+| Tool | Role |
+|------|------|
+| `CLAUDE.md` → Self-Improvement Loop | Core instruction to record and review lessons |
+| `memory/lessons.md` | Persistent correction log |
+| `memory/MEMORY.md` | Index of environment info and preferences |
+| `everything-claude-code:continuous-learning` | Auto-extract reusable patterns from sessions |
+| `everything-claude-code:continuous-learning-v2` | Instinct-based learning with confidence scores |
+
+---
+
+### Quick Reference: Which Tool for What
+
+| I want to... | Use this |
+|---|---|
+| Plan a feature | `superpowers:brainstorming` → `superpowers:writing-plans` |
+| Write tests first | `superpowers:test-driven-development` |
+| Look up library docs | **Context7 MCP** |
+| Review my code | `superpowers:requesting-code-review` |
+| Check for security issues | `everything-claude-code:security-review` |
+| Run E2E browser tests | `everything-claude-code:e2e` + **Playwright MCP** |
+| Create a PR | **GitHub MCP** |
+| Debug a failing test | `superpowers:systematic-debugging` |
+| Run parallel tasks | `superpowers:dispatching-parallel-agents` |
+| Fix build errors (Go) | `everything-claude-code:go-build` |
+| Fix build errors (TS) | `everything-claude-code:coding-standards` |
+| Create a PDF/DOCX/PPTX | `document-skills:pdf` / `docx` / `pptx` |
+| Fine-tune a model | `fine-tuning:unsloth` or `fine-tuning:axolotl` |
+| Deploy model inference | `inference-serving:vllm` or `inference-serving:sglang` |
+| Read a research paper | `paper-reading` skill |
+| Optimize model (quantize) | `optimization:awq` / `gptq` / `gguf` |
+
+---
+
 ## Customization
 
 ### Adding a New Language
