@@ -1,0 +1,33 @@
+{
+  "env": {
+    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
+  },
+  "model": "opus",
+  "enabledPlugins": {
+    "document-skills@anthropic-agent-skills": true,
+    "example-skills@anthropic-agent-skills": true,
+    "superpowers@superpowers-marketplace": true,
+    "fine-tuning@ai-research-skills": true,
+    "post-training@ai-research-skills": true,
+    "inference-serving@ai-research-skills": true,
+    "distributed-training@ai-research-skills": true,
+    "optimization@ai-research-skills": true,
+    "everything-claude-code@everything-claude-code": true
+  },
+  "skipDangerousModePermissionPrompt": true,
+  "permissions": {
+    "allow": [
+      "Bash(*)",
+      "Read(*)",
+      "Write(*)",
+      "Edit(*)",
+      "Glob(*)",
+      "Grep(*)",
+      "WebFetch(*)",
+      "WebSearch(*)",
+      "NotebookEdit(*)",
+      "Task(*)",
+      "mcp__*"
+    ]
+  }
+}
