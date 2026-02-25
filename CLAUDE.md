@@ -45,6 +45,12 @@ $HOME/anaconda3/envs/<env_name>/bin/python script.py
 - When the user explicitly says a cause is **not** the problem, **immediately stop** exploring that direction and pivot to other possibilities
 - Prefer providing concrete code implementations over asking repeated questions. If the user has made the same request multiple times, just write the code with reasonable assumptions noted in comments
 
+## Date Awareness
+
+- At the start of each conversation, check the current date
+- All web searches must use the current date as context to ensure up-to-date results
+- When searching for documentation, news, or recent developments, include the current year in search queries
+
 ## Self-Improvement Loop
 
 - After ANY correction from the user, **immediately** write the lesson to `memory/lessons.md`
