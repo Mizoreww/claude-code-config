@@ -198,6 +198,10 @@ claude mcp add --scope user --transport stdio db -- npx -y @bytebase/dbhub \
   --dsn "postgresql://user:pass@host:5432/dbname"
 ```
 
+## Acknowledgements
+
+The **Workflow Orchestration** section in `CLAUDE.md` (Plan Mode Default, Subagent Strategy, Self-Improvement Loop, Verification Before Done, Demand Elegance, Autonomous Bug Fixing) is inspired by [**@OmerFarukOruc**](https://github.com/OmerFarukOruc)'s excellent [AI Agent Workflow Orchestration Guidelines](https://gist.github.com/OmerFarukOruc/a02a5883e27b5b52ce740cadae0e4d60). His work on structured agent workflows and the `tasks/lessons.md` self-improvement pattern was a key influence on this configuration.
+
 ## License
 
 MIT
