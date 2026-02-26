@@ -31,7 +31,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "LESSONS_FILE=\"$HOME/.claude/lessons.md\"; if [ -f \"$LESSONS_FILE\" ]; then echo '=== Lessons Learned (auto-loaded via SessionStart hook) ==='; cat \"$LESSONS_FILE\"; echo '=== End of Lessons ==='; else echo 'No lessons.md found at ~/.claude/lessons.md'; fi",
+            "command": "LESSONS_FILE=\"$HOME/.claude/lessons.md\"; if [ -f \"$LESSONS_FILE\" ]; then echo '=== Lessons Learned (auto-loaded via SessionStart hook) ==='; cat \"$LESSONS_FILE\"; echo '=== End of Lessons ==='; echo 'IMPORTANT: You MUST briefly confirm you have loaded these lessons at session start.'; else echo 'No lessons.md found at ~/.claude/lessons.md'; fi",
             "statusMessage": "Loading lessons..."
           }
         ]
@@ -41,7 +41,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "LESSONS_FILE=\"$HOME/.claude/lessons.md\"; if [ -f \"$LESSONS_FILE\" ]; then echo '=== Lessons Learned (reloaded after compaction) ==='; cat \"$LESSONS_FILE\"; echo '=== End of Lessons ==='; fi",
+            "command": "LESSONS_FILE=\"$HOME/.claude/lessons.md\"; if [ -f \"$LESSONS_FILE\" ]; then echo '=== Lessons Learned (reloaded after compaction) ==='; cat \"$LESSONS_FILE\"; echo '=== End of Lessons ==='; echo 'IMPORTANT: You MUST briefly confirm you have loaded these lessons.'; else echo 'No lessons.md found at ~/.claude/lessons.md'; fi",
             "statusMessage": "Reloading lessons after compaction..."
           }
         ]
