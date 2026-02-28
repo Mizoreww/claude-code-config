@@ -1,6 +1,8 @@
+[Claude Main Branch](https://github.com/Mizoreww/claude-code-config/tree/main) | [中文 README（main）](https://github.com/Mizoreww/claude-code-config/blob/main/README.zh-CN.md) | **Codex Branch**
+
 # Codex Configuration
 
-Production-ready configuration for Codex: global instructions, lessons-based self-improvement, layered coding standards via skills, MCP integration, and one-command bootstrap.
+Production-ready configuration for Codex: global instructions, lessons-based self-improvement, layered coding standards through skills, MCP integration, and one-command bootstrap.
 
 ## Directory Structure
 
@@ -27,47 +29,82 @@ Then restart Codex.
 ### Self-Improvement Loop
 
 1. User correction is recorded into `~/.codex/lessons.md`
-2. Next session loads lessons automatically
-3. Stable patterns are promoted into `AGENTS.md`
+2. New sessions load lessons automatically
+3. Stable patterns are promoted into `~/.codex/AGENTS.md`
 
-### Auto Lesson Injection
+### Lesson Auto-Load (Codex-Native)
 
-`config.toml` sets:
+`config.toml` uses:
 
 ```toml
 model_instructions_file = "~/.codex/lessons.md"
 ```
 
-This keeps correction memory active without extra startup hooks.
+This keeps correction memory active without additional startup hooks.
 
-### Layered Rules
+### Layered Rules via Skills
 
-Rules are provided through skills (for example `claude-rules`, `python-patterns`, `golang-patterns`, `frontend-patterns`) so common principles and language-specific practices stay consistent.
+```
+core behavior   → AGENTS.md
+  ↓ reinforced by
+skills/rules    → claude-rules, python-patterns, golang-patterns, frontend-patterns
+```
+
+This keeps common principles and language-specific practices aligned.
+
+### Skill-First Setup
+
+`install.sh` bootstraps practical skills from open-source ecosystems:
+
+| Skill Set | Source | Coverage |
+|----------|--------|----------|
+| superpowers | obra/superpowers | planning, debugging, TDD workflows |
+| everything-claude-code | affaan-m/everything-claude-code | language patterns, testing, security, verification |
+| anthropic skills packs | anthropics/skills | document tools, frontend design, canvas/art, MCP builder |
+| claude-mem | thedotmack/claude-mem | persistent memory workflows (`make-plan`, `do`, `mem-search`) |
+| AI research skills | zechenzhangAGI/AI-research-SKILLs | fine-tuning, post-training, inference, distributed training, optimization |
 
 ### MCP Integration
 
-The default setup includes:
-- Lark MCP
-- Context7 MCP
-- GitHub MCP
-- Playwright MCP
+Default MCP servers in `config.toml`:
 
-### Skill Bundle Bootstrap
+| Server | Purpose |
+|--------|---------|
+| Lark MCP | Feishu/Lark docs, sheets, chats, base |
+| Context7 | up-to-date library documentation lookup |
+| GitHub | issue/PR/repo workflows |
+| Playwright | browser automation and E2E testing |
 
-`install.sh` installs a practical baseline from open-source ecosystems:
-- superpowers
-- everything-claude-code
-- anthropic skills packs (document + examples)
-- claude-mem
-- AI research skill packs
-
-## Notes
+## Installation Notes
 
 1. Fill your own credentials:
    - `YOUR_APP_ID` / `YOUR_APP_SECRET` (Lark)
    - `YOUR_GITHUB_PAT` (GitHub MCP)
-2. Uses current Codex config style (`web_search = "live"`, top-level)
-3. If `~/.codex/config.toml` already exists, merge manually
+2. This config uses current Codex style (for example `web_search = "live"` at top-level).
+3. If `~/.codex/config.toml` already exists, merge manually.
+
+## Security Note
+
+Template defaults are power-user oriented:
+- `approval_policy = "never"`
+- `sandbox_mode = "danger-full-access"`
+
+If you prefer safer defaults, adjust these in `~/.codex/config.toml`.
+
+## Customization
+
+- **Adjust global behavior**: edit `AGENTS.md`
+- **Add local rules**: extend skills in `~/.codex/skills`
+- **Tune model/runtime**: edit `config.toml`
+- **Enable/disable MCP servers**: edit MCP sections in `config.toml` or use `codex mcp` commands
+
+## Acknowledgements
+
+- [**AI Agent Workflow Orchestration Guidelines**](https://gist.github.com/OmerFarukOruc/a02a5883e27b5b52ce740cadae0e4d60) by [@OmerFarukOruc](https://github.com/OmerFarukOruc) — Inspiration for workflow orchestration
+- [**Harness Engineering**](https://openai.com/index/harness-engineering/) by OpenAI — engineers shift from writing code to designing systems with agents
+- [**Working for 10 Claude Codes**](https://mp.weixin.qq.com/s/9qPD3gXj3HLmrKC64Q6fbQ) by Hu Yuanming — practical experience running multiple coding agents in parallel
+- [**Claude Code in Action**](https://anthropic.skilljar.com/claude-code-in-action) by Anthropic Academy — official workflow training
+- [**ChatGPT Prompt Engineering for Developers**](https://www.deeplearning.ai/short-courses/chatgpt-prompt-engineering-for-developers/) by DeepLearning.AI & OpenAI — prompt engineering foundations
 
 ## License
 
