@@ -64,6 +64,15 @@ install_skills() {
 
   # Superpowers
   python3 "$INSTALLER" --repo obra/superpowers --path skills/using-superpowers skills/systematic-debugging skills/writing-plans skills/test-driven-development || true
+
+  # Local bundled skill from this repo
+  if [[ -f "$SCRIPT_DIR/skills/paper-reading/SKILL.md" ]]; then
+    mkdir -p "$CODEX_DIR/skills/paper-reading"
+    cp "$SCRIPT_DIR/skills/paper-reading/SKILL.md" "$CODEX_DIR/skills/paper-reading/SKILL.md"
+    info "Installed local skill: paper-reading"
+  else
+    warn "Local skill missing: skills/paper-reading/SKILL.md"
+  fi
 }
 
 main() {

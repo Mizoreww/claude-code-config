@@ -64,6 +64,9 @@ This keeps common principles and language-specific practices aligned.
 | anthropic skills packs | [anthropics/skills](https://github.com/anthropics/skills) | document tools, frontend design, canvas/art, MCP builder |
 | AI research skills | [zechenzhangAGI/AI-research-SKILLs](https://github.com/zechenzhangAGI/AI-research-SKILLs) | fine-tuning, post-training, inference, distributed training, optimization |
 
+Bundled local skill in this repo:
+- `paper-reading` (`skills/paper-reading/SKILL.md`) from main branch, installed to `~/.codex/skills/paper-reading/`
+
 ### MCP Integration
 
 Default MCP servers in `config.toml`:

@@ -64,6 +64,9 @@ skills/rules  → claude-rules、python-patterns、golang-patterns、frontend-pa
 | anthropic skills packs | [anthropics/skills](https://github.com/anthropics/skills) | 文档处理、前端设计、画布/艺术、MCP builder |
 | AI research skills | [zechenzhangAGI/AI-research-SKILLs](https://github.com/zechenzhangAGI/AI-research-SKILLs) | 微调、后训练、推理服务、分布式训练、优化 |
 
+本仓库内置本地技能：
+- `paper-reading`（`skills/paper-reading/SKILL.md`，同步自 `main` 分支），安装到 `~/.codex/skills/paper-reading/`
+
 ### MCP 集成
 
 `config.toml` 默认包含以下 MCP 服务：
