@@ -92,7 +92,7 @@ Install Codex configuration files.
 
 Options:
   --all                 Install everything (default)
-  --core                Install AGENTS.md, lessons.md, config.toml
+  --core                Install AGENTS.md, lessons.md, config.toml, agents/*
   --mcp                 Install MCP servers only
   --skills [GROUP]      Install skills only. GROUP: core, ai-research, all (default: all)
   --uninstall [COMP...] Uninstall managed files. COMP: --core --mcp --skills
@@ -295,14 +295,20 @@ install_core() {
 
   backup_if_exists "$CODEX_DIR/AGENTS.md"
   backup_if_exists "$CODEX_DIR/lessons.md"
+  backup_if_exists "$CODEX_DIR/agents"
 
   if $DRY_RUN; then
     info "Would copy: AGENTS.md -> $CODEX_DIR/AGENTS.md"
     info "Would copy: lessons.md -> $CODEX_DIR/lessons.md"
+    info "Would copy: agents/*.toml -> $CODEX_DIR/agents/"
   else
     cp "$SCRIPT_DIR/AGENTS.md" "$CODEX_DIR/AGENTS.md"
     cp "$SCRIPT_DIR/lessons.md" "$CODEX_DIR/lessons.md"
-    ok "AGENTS.md and lessons.md installed"
+    if [[ -d "$SCRIPT_DIR/agents" ]]; then
+      mkdir -p "$CODEX_DIR/agents"
+      cp "$SCRIPT_DIR"/agents/*.toml "$CODEX_DIR/agents/"
+    fi
+    ok "AGENTS.md, lessons.md, and agents installed"
   fi
 
   if [[ -f "$CODEX_DIR/config.toml" ]]; then
@@ -330,6 +336,7 @@ install_mcp() {
     info "Would add MCP server: context7"
     info "Would add MCP server: github"
     info "Would add MCP server: playwright"
+    info "Would add MCP server: openaiDeveloperDocs"
     return 0
   fi
 
@@ -337,6 +344,7 @@ install_mcp() {
   codex mcp add context7 -- npx -y @upstash/context7-mcp || true
   codex mcp add github --env GITHUB_PERSONAL_ACCESS_TOKEN=YOUR_GITHUB_PAT -- npx -y @modelcontextprotocol/server-github || true
   codex mcp add playwright -- npx -y @playwright/mcp@latest || true
+  codex mcp add openaiDeveloperDocs --url https://developers.openai.com/mcp || true
   ok "MCP setup complete (existing entries are ignored)"
 }
 
@@ -418,9 +426,10 @@ uninstall() {
         echo "  - $CODEX_DIR/AGENTS.md"
         echo "  - $CODEX_DIR/lessons.md"
         echo "  - $CODEX_DIR/config.toml"
+        echo "  - $CODEX_DIR/agents/*"
         ;;
       mcp)
-        echo "  - MCP servers: lark-mcp, context7, github, playwright"
+        echo "  - MCP servers: lark-mcp, context7, github, playwright, openaiDeveloperDocs"
         ;;
       skills)
         echo "  - Managed skills under $CODEX_DIR/skills"
@@ -446,6 +455,7 @@ uninstall() {
     case "$comp" in
       core)
         rm -f "$CODEX_DIR/AGENTS.md" "$CODEX_DIR/lessons.md" "$CODEX_DIR/config.toml"
+        rm -rf "$CODEX_DIR/agents"
         ok "Removed core files"
         ;;
       mcp)
@@ -454,6 +464,7 @@ uninstall() {
           codex mcp remove context7 2>/dev/null || true
           codex mcp remove github 2>/dev/null || true
           codex mcp remove playwright 2>/dev/null || true
+          codex mcp remove openaiDeveloperDocs 2>/dev/null || true
           ok "Removed MCP entries (if present)"
         else
           warn "codex CLI not found -- skip MCP removal"

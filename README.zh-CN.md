@@ -10,6 +10,7 @@
 .
 ├── AGENTS.md              # 全局指令
 ├── config.toml            # Codex 设置（模型、权限、MCP、lessons 注入）
+├── agents/                # Multi-agent 角色配置
 ├── lessons.md             # 自我纠正源日志
 ├── skills/                # 可选自定义技能
 ├── VERSION                # 安装器版本
@@ -38,7 +39,7 @@ bash install.sh
 
 ```bash
 ./install.sh                         # 安装全部（core + mcp + 全部技能）
-./install.sh --core                 # 仅 AGENTS.md / lessons.md / config.toml
+./install.sh --core                 # 仅 AGENTS.md / lessons.md / config.toml / agents/*
 ./install.sh --mcp                  # 仅 MCP 服务
 ./install.sh --skills core          # 仅核心技能集
 ./install.sh --skills ai-research   # 仅 AI 研究技能集
@@ -64,6 +65,16 @@ model_instructions_file = "~/.codex/lessons.md"
 ```
 
 这样在会话开始时就会加载纠错规则。
+
+### 开箱即用 Multi-Agent
+
+`config.toml` 默认开启实验特性 `multi_agent`，并预置 3 个角色：
+
+- `explorer`：代码路径探索与证据归纳
+- `reviewer`：正确性/回归/安全风险审查
+- `docs_researcher`：通过 OpenAI docs MCP + Context7 做 API/文档核验
+
+角色配置文件位于 `agents/*.toml`，安装后会落到 `~/.codex/agents/`。
 
 ### 通过技能实现分层规则
 
@@ -99,6 +110,7 @@ skills/rules  → claude-rules、python-patterns、golang-patterns、frontend-pa
 | Context7 | 最新库文档检索（[repo](https://github.com/upstash/context7)） |
 | GitHub | Issue / PR / 仓库工作流（[repo](https://github.com/github/github-mcp-server)） |
 | Playwright | 浏览器自动化与 E2E 测试（[repo](https://github.com/microsoft/playwright-mcp)） |
+| OpenAI Developer Docs | OpenAI 官方文档 MCP 端点（`https://developers.openai.com/mcp`） |
 
 ## 安装说明
 

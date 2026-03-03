@@ -32,3 +32,25 @@ GITHUB_PERSONAL_ACCESS_TOKEN = "YOUR_GITHUB_PAT"
 command = "npx"
 args = ["-y", "@playwright/mcp@latest"]
 startup_timeout_sec = 30
+
+[mcp_servers.openaiDeveloperDocs]
+url = "https://developers.openai.com/mcp"
+
+[features]
+multi_agent = true
+
+[agents]
+max_threads = 4
+max_depth = 1
+
+[agents.explorer]
+description = "Scans code paths and summarizes findings"
+config_file = "agents/explorer.toml"
+
+[agents.reviewer]
+description = "Reviews diffs for bugs, regressions, and missing tests"
+config_file = "agents/reviewer.toml"
+
+[agents.docs_researcher]
+description = "Researches docs and API usage via OpenAI docs MCP/context7"
+config_file = "agents/docs-researcher.toml"

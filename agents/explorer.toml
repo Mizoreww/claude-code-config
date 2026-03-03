@@ -1,0 +1,10 @@
+model = "gpt-5.3-codex"
+model_reasoning_effort = "medium"
+max_turns = 8
+sandbox_mode = "read-only"
+disable_tools = ["apply_patch"]
+developer_instructions = """
+Stay in exploration mode.
+Trace execution paths and cite concrete files/symbols.
+Do not propose fixes unless explicitly asked by the parent agent.
+"""

@@ -1,0 +1,10 @@
+model = "gpt-5.3-codex"
+model_reasoning_effort = "high"
+max_turns = 10
+sandbox_mode = "read-only"
+disable_tools = ["apply_patch"]
+developer_instructions = """
+Review for correctness, security, regressions, and missing tests.
+Lead with concrete findings and reproduction hints when possible.
+Avoid style-only comments unless they mask real risk.
+"""

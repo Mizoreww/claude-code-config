@@ -10,6 +10,7 @@ Production-ready configuration for Codex: global instructions, lessons-driven se
 .
 ├── AGENTS.md              # Global instructions
 ├── config.toml            # Codex settings (model, permissions, MCP, lessons injection)
+├── agents/                # Multi-agent role configs
 ├── lessons.md             # Self-correction source log
 ├── skills/                # Optional custom skills
 ├── VERSION                # Installer version
@@ -38,7 +39,7 @@ Then restart Codex.
 
 ```bash
 ./install.sh                         # install all (core + mcp + all skills)
-./install.sh --core                 # only AGENTS.md / lessons.md / config.toml
+./install.sh --core                 # only AGENTS.md / lessons.md / config.toml / agents/*
 ./install.sh --mcp                  # only MCP servers
 ./install.sh --skills core          # only core skill sets
 ./install.sh --skills ai-research   # only AI research skill sets
@@ -64,6 +65,16 @@ model_instructions_file = "~/.codex/lessons.md"
 ```
 
 This keeps correction rules active at session start.
+
+### Multi-Agent Ready
+
+`config.toml` ships with experimental multi-agent enabled and three default roles:
+
+- `explorer`: code path exploration and evidence collection
+- `reviewer`: correctness/regression/security-focused review
+- `docs_researcher`: API/docs verification through OpenAI docs MCP + Context7
+
+Role files live under `agents/*.toml` and are installed to `~/.codex/agents/`.
 
 ### Layered Rules via Skills
 
@@ -99,6 +110,7 @@ Default MCP servers in `config.toml`:
 | Context7 | up-to-date library documentation lookup ([repo](https://github.com/upstash/context7)) |
 | GitHub | issue/PR/repo workflows ([repo](https://github.com/github/github-mcp-server)) |
 | Playwright | browser automation and E2E testing ([repo](https://github.com/microsoft/playwright-mcp)) |
+| OpenAI Developer Docs | official OpenAI docs MCP endpoint (`https://developers.openai.com/mcp`) |
 
 ## Installation Notes
 
