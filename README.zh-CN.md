@@ -100,6 +100,10 @@ skills/rules  → claude-rules、python-patterns、golang-patterns、frontend-pa
 本仓库内置本地技能：
 - `paper-reading`（`skills/paper-reading/SKILL.md`，同步自 `main` 分支），安装到 `~/.codex/skills/paper-reading/`
 
+### 版本变更日志策略
+
+AGENTS.md 包含 **版本变更日志** 规则：在做版本级改动（新功能、重大重构、Breaking Change）时，agent 会主动在项目根目录维护 `CHANGELOG.md`，每条记录包含功能、设计理念和注意细节。使设计决策与代码同步可追溯。
+
 ### MCP 集成
 
 `config.toml` 默认包含以下 MCP 服务：
