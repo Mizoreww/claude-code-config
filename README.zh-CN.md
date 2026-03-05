@@ -1,8 +1,8 @@
 <!-- 翻译同步自 README.md（source of truth）。更新英文版后请同步此文件。 -->
 
-[Main English](./README.md) | **Main 中文** | [Codex English](https://github.com/Mizoreww/claude-code-config/blob/codex/README.md) | [Codex 中文](https://github.com/Mizoreww/claude-code-config/blob/codex/README.zh-CN.md)
+[Main English](./README.md) | **Main 中文** | [Codex English](https://github.com/Mizoreww/awesome-claude-code-config/blob/codex/README.md) | [Codex 中文](https://github.com/Mizoreww/awesome-claude-code-config/blob/codex/README.zh-CN.md)
 
-# Claude Code 配置
+# Awesome Claude Code 配置
 
 [Claude Code](https://claude.com/claude-code) 的生产级配置：全局指令、多语言编码规则、插件、MCP 集成、自我改进循环。
 
@@ -27,20 +27,20 @@
 **一行远程安装**（无需 clone）：
 
 ```bash
-bash <(curl -fsSL https://raw.githubusercontent.com/Mizoreww/claude-code-config/main/install.sh)
+bash <(curl -fsSL https://raw.githubusercontent.com/Mizoreww/awesome-claude-code-config/main/install.sh)
 ```
 
 安装指定版本：
 
 ```bash
-VERSION=v1.0.0 bash <(curl -fsSL https://raw.githubusercontent.com/Mizoreww/claude-code-config/main/install.sh)
+VERSION=v1.0.0 bash <(curl -fsSL https://raw.githubusercontent.com/Mizoreww/awesome-claude-code-config/main/install.sh)
 ```
 
 **本地安装**（从 clone）：
 
 ```bash
-git clone https://github.com/Mizoreww/claude-code-config.git
-cd claude-code-config
+git clone https://github.com/Mizoreww/awesome-claude-code-config.git
+cd awesome-claude-code-config
 ./install.sh              # 安装全部
 ./install.sh --dry-run    # 预览变更
 ```

@@ -2,13 +2,13 @@
 set -euo pipefail
 
 # ============================================================
-# Claude Code Configuration Installer
-# https://github.com/Mizoreww/claude-code-config
+# Awesome Claude Code Configuration Installer
+# https://github.com/Mizoreww/awesome-claude-code-config
 # ============================================================
 
 CLAUDE_DIR="$HOME/.claude"
-REPO_URL="https://github.com/Mizoreww/claude-code-config"
-VERSION_STAMP_FILE="$CLAUDE_DIR/.claude-code-config-version"
+REPO_URL="https://github.com/Mizoreww/awesome-claude-code-config"
+VERSION_STAMP_FILE="$CLAUDE_DIR/.awesome-claude-code-config-version"
 
 # Colors
 RED='\033[0;31m'
@@ -81,7 +81,7 @@ get_installed_version() {
 }
 
 get_remote_version() {
-    local url="https://raw.githubusercontent.com/Mizoreww/claude-code-config/main/VERSION"
+    local url="https://raw.githubusercontent.com/Mizoreww/awesome-claude-code-config/main/VERSION"
     if command -v curl &>/dev/null; then
         curl -fsSL "$url" 2>/dev/null | tr -d '[:space:]' || echo "unavailable"
     elif command -v wget &>/dev/null; then
@@ -97,7 +97,7 @@ show_version() {
     installed_ver="$(get_installed_version)"
     remote_ver="$(get_remote_version)"
 
-    echo "claude-code-config version info:"
+    echo "awesome-claude-code-config version info:"
     echo "  Source:    $source_ver"
     echo "  Installed: $installed_ver"
     echo "  Remote:    $remote_ver"
@@ -760,7 +760,7 @@ main() {
 
     echo ""
     echo "========================================="
-    echo "  Claude Code Configuration Installer"
+    echo "  Awesome Claude Code Config Installer"
     echo "  $(get_source_version)"
     echo "========================================="
     echo ""

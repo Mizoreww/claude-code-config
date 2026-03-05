@@ -1,8 +1,8 @@
 <!-- This is the source of truth. README.zh-CN.md is the Chinese translation. Keep both in sync. -->
 
-**Main English** | [Main 中文](./README.zh-CN.md) | [Codex English](https://github.com/Mizoreww/claude-code-config/blob/codex/README.md) | [Codex 中文](https://github.com/Mizoreww/claude-code-config/blob/codex/README.zh-CN.md)
+**Main English** | [Main 中文](./README.zh-CN.md) | [Codex English](https://github.com/Mizoreww/awesome-claude-code-config/blob/codex/README.md) | [Codex 中文](https://github.com/Mizoreww/awesome-claude-code-config/blob/codex/README.zh-CN.md)
 
-# Claude Code Configuration
+# Awesome Claude Code Configuration
 
 Production-ready configuration for [Claude Code](https://claude.com/claude-code): global instructions, multi-language coding rules, plugins, MCP integration, and a self-improvement loop.
 
@@ -27,20 +27,20 @@ Production-ready configuration for [Claude Code](https://claude.com/claude-code)
 **One-line remote install** (no clone needed):
 
 ```bash
-bash <(curl -fsSL https://raw.githubusercontent.com/Mizoreww/claude-code-config/main/install.sh)
+bash <(curl -fsSL https://raw.githubusercontent.com/Mizoreww/awesome-claude-code-config/main/install.sh)
 ```
 
 Or install a specific version:
 
 ```bash
-VERSION=v1.0.0 bash <(curl -fsSL https://raw.githubusercontent.com/Mizoreww/claude-code-config/main/install.sh)
+VERSION=v1.0.0 bash <(curl -fsSL https://raw.githubusercontent.com/Mizoreww/awesome-claude-code-config/main/install.sh)
 ```
 
 **Local install** (from clone):
 
 ```bash
-git clone https://github.com/Mizoreww/claude-code-config.git
-cd claude-code-config
+git clone https://github.com/Mizoreww/awesome-claude-code-config.git
+cd awesome-claude-code-config
 ./install.sh              # Install everything
 ./install.sh --dry-run    # Preview changes
 ```
