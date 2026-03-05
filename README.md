@@ -14,6 +14,7 @@ Production-ready configuration for [Claude Code](https://claude.com/claude-code)
 ├── settings.json          # Settings (permissions, plugins, hooks, model)
 ├── lessons.md             # Self-correction log template (auto-loaded via hook)
 ├── rules/                 # Multi-language coding standards (common + python/typescript/golang)
+├── hooks/                 # Statusline with gradient progress bars (context + 5h usage)
 ├── mcp/                   # MCP server config (Lark-MCP, Codex CLI)
 ├── plugins/               # Plugin installation guide (19 plugins, 5 marketplaces)
 ├── skills/                # Custom skills (paper-reading)
@@ -97,6 +98,28 @@ cd claude-code-config
 
 Replaces the previous approach of requiring manual `Read lessons.md` in CLAUDE.md (more reliable).
 
+### Statusline
+
+A single-line status bar with gradient progress bars, powered by `hooks/statusline.sh`:
+
+```
+🧠 Claude Opus 4.6 │ 📂 project │  main │ context ████████░░░░░░░░░░░░ 40% 200k │ 5h ██████░░░░░░░░░░░░░░ 29% 3h42m
+```
+
+- **Model** + **directory** + **git branch**
+- **Context window**: gradient bar (green → yellow → red) with percentage and size
+- **5-hour usage**: pulled from `api.anthropic.com/api/oauth/usage` (cached 60s), shows reset countdown
+- Progress bars are fixed-width (20 chars) with 16-step color gradients
+
+Configured via `statusLine` in `settings.json`:
+
+```json
+"statusLine": {
+  "type": "command",
+  "command": "bash $HOME/.claude/hooks/statusline.sh"
+}
+```
+
 ### Smart Settings Merge
 
 When `settings.json` already exists, the installer performs a smart merge (requires `jq`):
@@ -105,6 +128,7 @@ When `settings.json` already exists, the installer performs a smart merge (requi
 - **permissions.allow**: Union of both arrays (deduped)
 - **enabledPlugins**: Merged, existing keys take priority
 - **hooks.SessionStart**: Deduplicated by `matcher` field
+- **statusLine**: Incoming config takes priority
 
 Without `jq`, a manual merge warning is shown instead.
 

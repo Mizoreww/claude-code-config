@@ -130,6 +130,7 @@ Options:
                         Available: python, typescript, golang
     --skills            Install custom skills only
     --lessons           Install lessons.md template only
+    --hooks             Install hooks (statusline) only
     --mcp               Install MCP servers (Lark, Codex CLI) — not included in --all
     --plugins [GROUP]   Install plugins (default: core)
                         Groups: core, ai-research, all
@@ -161,6 +162,7 @@ INSTALL_ALL=true
 INSTALL_RULES=false
 INSTALL_SKILLS=false
 INSTALL_LESSONS=false
+INSTALL_HOOKS=false
 INSTALL_MCP=false
 INSTALL_PLUGINS=false
 INSTALL_CLAUDE_MD=false
@@ -233,6 +235,11 @@ parse_args() {
                 INSTALL_LESSONS=true
                 shift
                 ;;
+            --hooks)
+                has_component=true
+                INSTALL_HOOKS=true
+                shift
+                ;;
             --mcp)
                 has_component=true
                 INSTALL_MCP=true
@@ -276,6 +283,7 @@ parse_args() {
                         --settings) UNINSTALL_COMPONENTS+=("settings"); shift ;;
                         --claude-md) UNINSTALL_COMPONENTS+=("claude-md"); shift ;;
                         --lessons)  UNINSTALL_COMPONENTS+=("lessons"); shift ;;
+                        --hooks)    UNINSTALL_COMPONENTS+=("hooks"); shift ;;
                         --plugins)  UNINSTALL_COMPONENTS+=("plugins"); shift ;;
                         --mcp)      UNINSTALL_COMPONENTS+=("mcp"); shift ;;
                         --force)    FORCE=true; shift ;;
@@ -315,21 +323,6 @@ parse_args() {
     fi
 }
 
-# --- Backup utility -----------------------------------------------------
-
-backup_if_exists() {
-    local target="$1"
-    if [[ -e "$target" ]]; then
-        local backup="${target}.backup.$(date +%Y%m%d%H%M%S)"
-        if $DRY_RUN; then
-            warn "Would backup: $target -> $backup"
-        else
-            cp -r "$target" "$backup"
-            warn "Backed up: $target -> $backup"
-        fi
-    fi
-}
-
 # --- Confirm prompt (respects --force) ----------------------------------
 
 confirm() {
@@ -350,7 +343,6 @@ confirm() {
 
 install_claude_md() {
     info "Installing CLAUDE.md..."
-    backup_if_exists "$CLAUDE_DIR/CLAUDE.md"
     if $DRY_RUN; then
         info "Would copy: CLAUDE.md -> $CLAUDE_DIR/CLAUDE.md"
     else
@@ -381,14 +373,13 @@ install_settings() {
         return
     fi
 
-    backup_if_exists "$CLAUDE_DIR/settings.json"
-
     if $DRY_RUN; then
         info "Would smart-merge settings.json (jq available)"
         info "  - env: incoming as defaults, existing overrides"
         info "  - permissions.allow: union of arrays"
         info "  - enabledPlugins: merged, existing keys take priority"
         info "  - hooks.SessionStart: deduplicated by matcher"
+        info "  - statusLine: incoming takes priority"
         return
     fi
 
@@ -423,6 +414,7 @@ install_settings() {
     ($base * $over) * {
       env: $env,
       enabledPlugins: $plugins,
+      statusLine: ($base.statusLine // null),
       permissions: (($base.permissions // {}) * ($over.permissions // {}) + {allow: $allow}),
       hooks: (($base.hooks // {}) * ($over.hooks // {}) + {SessionStart: $session_hooks})
     }
@@ -443,7 +435,7 @@ install_rules() {
     mkdir -p "$CLAUDE_DIR/rules"
 
     # Always install common rules
-    backup_if_exists "$CLAUDE_DIR/rules/common"
+
     if $DRY_RUN; then
         info "Would copy: rules/common/ -> $CLAUDE_DIR/rules/common/"
     else
@@ -467,7 +459,7 @@ install_rules() {
 
     for lang in "${langs[@]}"; do
         if [[ -d "$SCRIPT_DIR/rules/$lang" ]]; then
-            backup_if_exists "$CLAUDE_DIR/rules/$lang"
+
             if $DRY_RUN; then
                 info "Would copy: rules/$lang/ -> $CLAUDE_DIR/rules/$lang/"
             else
@@ -494,7 +486,7 @@ install_skills() {
         [[ -d "$skill_dir" ]] || continue
         local skill
         skill=$(basename "$skill_dir")
-        backup_if_exists "$CLAUDE_DIR/skills/$skill"
+
         if $DRY_RUN; then
             info "Would copy: skills/$skill/ -> $CLAUDE_DIR/skills/$skill/"
         else
@@ -518,6 +510,24 @@ install_lessons() {
             ok "lessons.md template installed to $target"
         fi
     fi
+}
+
+install_hooks() {
+    info "Installing hooks..."
+    mkdir -p "$CLAUDE_DIR/hooks"
+
+    for hook_file in "$SCRIPT_DIR"/hooks/*; do
+        [[ -f "$hook_file" ]] || continue
+        local fname
+        fname=$(basename "$hook_file")
+        if $DRY_RUN; then
+            info "Would copy: hooks/$fname -> $CLAUDE_DIR/hooks/$fname"
+        else
+            cp "$hook_file" "$CLAUDE_DIR/hooks/$fname"
+            chmod +x "$CLAUDE_DIR/hooks/$fname"
+            ok "Hook installed: $fname"
+        fi
+    done
 }
 
 install_mcp() {
@@ -625,7 +635,7 @@ uninstall() {
 
     # If no specific components, uninstall everything
     if [[ ${#components[@]} -eq 0 ]]; then
-        components=(claude-md settings rules skills lessons)
+        components=(claude-md settings rules skills lessons hooks)
     fi
 
     echo ""
@@ -637,6 +647,7 @@ uninstall() {
             rules)     echo "  - $CLAUDE_DIR/rules/" ;;
             skills)    echo "  - $CLAUDE_DIR/skills/ (installer-managed only)" ;;
             lessons)   echo "  - $CLAUDE_DIR/lessons.md" ;;
+            hooks)     echo "  - $CLAUDE_DIR/hooks/ (installer-managed only)" ;;
             plugins)   echo "  - Installed plugins (requires claude CLI)" ;;
             mcp)       echo "  - MCP server: lark-mcp (requires claude CLI)" ;;
         esac
@@ -679,6 +690,19 @@ uninstall() {
                 ;;
             lessons)
                 rm -f "$CLAUDE_DIR/lessons.md" && ok "Removed lessons.md" ;;
+            hooks)
+                # Only remove hooks that ship with this repo
+                if [[ -d "$SCRIPT_DIR/hooks" ]]; then
+                    for hook_file in "$SCRIPT_DIR"/hooks/*; do
+                        [[ -f "$hook_file" ]] || continue
+                        local fname
+                        fname=$(basename "$hook_file")
+                        rm -f "$CLAUDE_DIR/hooks/$fname" && ok "Removed hook: $fname"
+                    done
+                else
+                    rm -rf "$CLAUDE_DIR/hooks" && ok "Removed hooks/"
+                fi
+                ;;
             plugins)
                 if command -v claude &>/dev/null; then
                     local all_plugins=("${PLUGINS_CORE[@]}" "${PLUGINS_AI_RESEARCH[@]}")
@@ -760,6 +784,7 @@ main() {
         install_rules
         install_skills
         install_lessons
+        install_hooks
         # MCP is NOT included in --all; use --mcp explicitly
         install_plugins
     else
@@ -768,6 +793,7 @@ main() {
         $INSTALL_RULES && install_rules
         $INSTALL_SKILLS && install_skills
         $INSTALL_LESSONS && install_lessons
+        $INSTALL_HOOKS && install_hooks
         $INSTALL_MCP && install_mcp
         $INSTALL_PLUGINS && install_plugins
     fi

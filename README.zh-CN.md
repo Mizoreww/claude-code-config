@@ -14,6 +14,7 @@
 ├── settings.json          # 设置（权限、插件、hooks、模型）
 ├── lessons.md             # 自我纠正日志模板（通过 hook 自动加载）
 ├── rules/                 # 多语言编码标准（common + python/typescript/golang）
+├── hooks/                 # 状态栏：渐变进度条（context + 5h 用量）
 ├── mcp/                   # MCP 服务器配置（Lark-MCP、Codex CLI）
 ├── plugins/               # 插件安装指南（19 个插件，5 个市场）
 ├── skills/                # 自定义技能（paper-reading）
@@ -97,6 +98,28 @@ cd claude-code-config
 
 取代了以前在 CLAUDE.md 中要求手动 Read lessons.md 的方式（更可靠）。
 
+### 状态栏
+
+单行状态栏，渐变进度条，由 `hooks/statusline.sh` 驱动：
+
+```
+🧠 Claude Opus 4.6 │ 📂 project │  main │ context ████████░░░░░░░░░░░░ 40% 200k │ 5h ██████░░░░░░░░░░░░░░ 29% 3h42m
+```
+
+- **模型** + **目录** + **git 分支**
+- **Context 窗口**：渐变进度条（绿 → 黄 → 红），显示百分比和大小
+- **5 小时用量**：从 `api.anthropic.com/api/oauth/usage` 拉取（60s 缓存），显示重置倒计时
+- 进度条固定 20 字符宽，16 级颜色渐变
+
+通过 `settings.json` 中的 `statusLine` 配置：
+
+```json
+"statusLine": {
+  "type": "command",
+  "command": "bash $HOME/.claude/hooks/statusline.sh"
+}
+```
+
 ### settings.json 智能合并
 
 当 `settings.json` 已存在时，安装器会执行智能合并（需要 `jq`）：
@@ -105,6 +128,7 @@ cd claude-code-config
 - **permissions.allow**：两个数组取并集（去重）
 - **enabledPlugins**：合并，已有键优先
 - **hooks.SessionStart**：按 `matcher` 字段去重
+- **statusLine**：新配置优先
 
 没有 `jq` 时，会显示手动合并提示。
 
