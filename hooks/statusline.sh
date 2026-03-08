@@ -19,13 +19,28 @@ if git -C "$cwd" rev-parse --is-inside-work-tree --no-optional-locks 2>/dev/null
     git_branch=$(git -C "$cwd" symbolic-ref --short HEAD 2>/dev/null || git -C "$cwd" rev-parse --short HEAD 2>/dev/null || echo "")
 fi
 
-# --- 5-hour usage from API (cached 60s) ---
+# --- 5-hour usage from API (non-blocking, async refresh) ---
+# Strategy: statusline ONLY reads from cache (never blocks on network).
+# If cache is stale, a background process refreshes it for next render.
 USAGE_CACHE="/tmp/claude-usage-cache.json"
+USAGE_LOCK="/tmp/claude-usage-fetch.lock"
 CACHE_TTL=60
+CACHE_MAX_AGE=600  # 10min — don't display data older than this
 usage_5h=""
 usage_resets=""
 
-fetch_usage() {
+# Background fetch: updates cache file, never blocks the statusline
+bg_fetch_usage() {
+    # Prevent concurrent fetches
+    if [ -f "$USAGE_LOCK" ]; then
+        local lock_age lock_mtime
+        lock_mtime=$(stat -f %m "$USAGE_LOCK" 2>/dev/null || stat -c %Y "$USAGE_LOCK" 2>/dev/null || echo 0)
+        lock_age=$(( $(date +%s) - lock_mtime ))
+        # Stale lock (>30s) — remove and continue
+        [ "$lock_age" -lt 30 ] && return
+    fi
+    echo $$ > "$USAGE_LOCK"
+
     local token kc_json
     # 1) macOS Keychain
     kc_json=$(security find-generic-password -s "Claude Code-credentials" -w 2>/dev/null)
@@ -37,43 +52,48 @@ fetch_usage() {
     # 3) Fall back to credentials file
     if [ -z "$token" ]; then
         local creds="$HOME/.claude/.credentials.json"
-        [ -f "$creds" ] || return
+        [ -f "$creds" ] || { rm -f "$USAGE_LOCK"; return; }
         token=$(jq -r '.claudeAiOauth.accessToken // empty' "$creds" 2>/dev/null)
     fi
-    [ -z "$token" ] && return
-    curl -s --max-time 3 \
+    if [ -z "$token" ]; then
+        rm -f "$USAGE_LOCK"
+        return
+    fi
+
+    local api_result
+    api_result=$(curl -s --connect-timeout 2 --max-time 5 \
         -H "Authorization: Bearer $token" \
         -H "Content-Type: application/json" \
         -H "User-Agent: claude-code/2.1.69" \
         -H "anthropic-beta: oauth-2025-04-20" \
-        "https://api.anthropic.com/api/oauth/usage" 2>/dev/null
+        "https://api.anthropic.com/api/oauth/usage" 2>/dev/null)
+
+    if [ -n "$api_result" ] && echo "$api_result" | jq -e '.five_hour' &>/dev/null; then
+        echo "$api_result" > "$USAGE_CACHE" 2>/dev/null
+    fi
+    rm -f "$USAGE_LOCK"
 }
 
-# Use cache if fresh enough
+# Read from cache (instant, no network)
 now=$(date +%s)
+cache_is_fresh=false
 if [ -f "$USAGE_CACHE" ]; then
     cache_mtime=$(stat -f %m "$USAGE_CACHE" 2>/dev/null || stat -c %Y "$USAGE_CACHE" 2>/dev/null || echo 0)
     cache_age=$(( now - cache_mtime ))
     if [ "$cache_age" -lt "$CACHE_TTL" ]; then
+        cache_is_fresh=true
+    fi
+    # Display from cache only if not too old
+    if [ "$cache_age" -lt "$CACHE_MAX_AGE" ]; then
         usage_5h=$(jq -r '.five_hour.utilization // empty' "$USAGE_CACHE" 2>/dev/null)
         usage_resets=$(jq -r '.five_hour.resets_at // empty' "$USAGE_CACHE" 2>/dev/null)
     fi
 fi
 
-# Fetch if cache miss or stale
-if [ -z "$usage_5h" ]; then
-    api_result=$(fetch_usage)
-    if [ -n "$api_result" ] && echo "$api_result" | jq -e '.five_hour' &>/dev/null; then
-        echo "$api_result" > "$USAGE_CACHE" 2>/dev/null
-        usage_5h=$(echo "$api_result" | jq -r '.five_hour.utilization // empty')
-        usage_resets=$(echo "$api_result" | jq -r '.five_hour.resets_at // empty')
-    fi
-fi
-
-# Fallback: use expired cache if API failed
-if [ -z "$usage_5h" ] && [ -f "$USAGE_CACHE" ]; then
-    usage_5h=$(jq -r '.five_hour.utilization // empty' "$USAGE_CACHE" 2>/dev/null)
-    usage_resets=$(jq -r '.five_hour.resets_at // empty' "$USAGE_CACHE" 2>/dev/null)
+# If cache is stale or missing, trigger async background refresh
+if ! $cache_is_fresh; then
+    bg_fetch_usage &>/dev/null &
+    disown 2>/dev/null
 fi
 
 # --- Colors ---
