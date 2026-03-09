@@ -1,7 +1,8 @@
 # Lessons Learned
 
 > Recorded after user corrections. Format: date, context, mistake, rule.
-> **Location: `~/.claude/lessons.md` only. Never create project-level copies.**
+> **This file (`~/.claude/lessons.md`) stores global, cross-project lessons only.**
+> Project-specific preferences belong in the project's `MEMORY.md` — see CLAUDE.md § Storage Decision.
 
 ---
 
