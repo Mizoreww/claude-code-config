@@ -22,7 +22,7 @@ Production-ready configuration for [Codex CLI](https://github.com/openai/codex) 
 One-line remote install:
 
 ```bash
-bash <(curl -fsSL https://raw.githubusercontent.com/Mizoreww/claude-code-config/codex/install.sh)
+bash <(curl -fsSL https://raw.githubusercontent.com/Mizoreww/awesome-claude-code-config/codex/install.sh)
 ```
 
 Local install:

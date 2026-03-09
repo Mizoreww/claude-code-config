@@ -22,7 +22,7 @@
 一行远程安装：
 
 ```bash
-bash <(curl -fsSL https://raw.githubusercontent.com/Mizoreww/claude-code-config/codex/install.sh)
+bash <(curl -fsSL https://raw.githubusercontent.com/Mizoreww/awesome-claude-code-config/codex/install.sh)
 ```
 
 本地安装：
