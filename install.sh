@@ -172,29 +172,16 @@ Install Claude Code configuration files.
 Running without options launches an interactive component selector.
 
 Options:
-    --all               Install everything (MCP excluded, see --mcp)
-    --rules LANG...     Install common + specific language rules
-                        Available: python, typescript, golang
-    --skills            Install custom skills only
-    --lessons           Install lessons.md template only
-    --hooks             Install hooks (statusline) only
-    --mcp               Install MCP servers (Lark) — not included in --all
-    --plugins [GROUP]   Install plugins
-                        Groups: essential (13), claude-mem, ai-research, all
-    --claude-md         Install CLAUDE.md only
-    --settings          Install settings.json only
-    --uninstall [COMP]  Remove installed files (optionally: rules, skills, settings, etc.)
+    --all               Install everything (non-interactive)
+    --uninstall         Remove all installed files
     --version           Show version info
     --dry-run           Show what would be installed without doing it
-    --force             Skip confirmation prompts (for non-interactive use)
+    --force             Skip confirmation prompts
     -h, --help          Show this help
 
 Examples:
     $(basename "$0")                                 # Interactive selector
     $(basename "$0") --all                           # Install everything
-    $(basename "$0") --rules python golang           # Common + Python + Go rules
-    $(basename "$0") --plugins essential             # Essential plugins only
-    $(basename "$0") --plugins all                   # All plugins
     $(basename "$0") --uninstall                     # Uninstall everything
     $(basename "$0") --dry-run --all                 # Preview full install
     bash <(curl -fsSL $REPO_URL/raw/main/install.sh) --all  # Remote install
@@ -222,7 +209,6 @@ INTERACTIVE=false
 RULE_LANGS=()
 RULE_LANGS_EXPLICIT=false
 PLUGIN_GROUPS=()
-UNINSTALL_COMPONENTS=()
 
 # --- Plugin groups ------------------------------------------------------
 
@@ -268,100 +254,24 @@ parse_args() {
         return
     fi
 
-    local has_component=false
+    local has_action=false
 
     while [[ $# -gt 0 ]]; do
         case "$1" in
             --all)
                 INSTALL_ALL=true
                 EXPLICIT_ALL=true
-                has_component=true
-                shift
-                ;;
-            --rules)
-                has_component=true
-                INSTALL_RULES=true
-                RULE_LANGS_EXPLICIT=true
-                shift
-                while [[ $# -gt 0 && ! "$1" =~ ^-- ]]; do
-                    RULE_LANGS+=("$1")
-                    shift
-                done
-                ;;
-            --skills)
-                has_component=true
-                INSTALL_SKILLS=true
-                shift
-                ;;
-            --lessons)
-                has_component=true
-                INSTALL_LESSONS=true
-                shift
-                ;;
-            --hooks)
-                has_component=true
-                INSTALL_HOOKS=true
-                shift
-                ;;
-            --mcp)
-                has_component=true
-                INSTALL_MCP=true
-                shift
-                ;;
-            --plugins)
-                has_component=true
-                INSTALL_PLUGINS=true
-                shift
-                # Optional group argument
-                if [[ $# -gt 0 && ! "$1" =~ ^-- ]]; then
-                    case "$1" in
-                        essential|claude-mem|core|ai-research|all)
-                            PLUGIN_GROUPS+=("$1")
-                            shift
-                            ;;
-                        *)
-                            # Not a group name, default to core
-                            PLUGIN_GROUPS+=("core")
-                            ;;
-                    esac
-                else
-                    PLUGIN_GROUPS+=("core")
-                fi
-                ;;
-            --claude-md)
-                has_component=true
-                INSTALL_CLAUDE_MD=true
-                shift
-                ;;
-            --settings)
-                has_component=true
-                INSTALL_SETTINGS=true
+                has_action=true
                 shift
                 ;;
             --uninstall)
                 UNINSTALL=true
-                has_component=true
+                has_action=true
                 shift
-                # Collect component flags that follow --uninstall
-                while [[ $# -gt 0 && "$1" =~ ^-- ]]; do
-                    case "$1" in
-                        --rules)    UNINSTALL_COMPONENTS+=("rules"); shift ;;
-                        --skills)   UNINSTALL_COMPONENTS+=("skills"); shift ;;
-                        --settings) UNINSTALL_COMPONENTS+=("settings"); shift ;;
-                        --claude-md) UNINSTALL_COMPONENTS+=("claude-md"); shift ;;
-                        --lessons)  UNINSTALL_COMPONENTS+=("lessons"); shift ;;
-                        --hooks)    UNINSTALL_COMPONENTS+=("hooks"); shift ;;
-                        --plugins)  UNINSTALL_COMPONENTS+=("plugins"); shift ;;
-                        --mcp)      UNINSTALL_COMPONENTS+=("mcp"); shift ;;
-                        --force)    FORCE=true; shift ;;
-                        --dry-run)  DRY_RUN=true; shift ;;
-                        *)          break ;;
-                    esac
-                done
                 ;;
             --version)
                 SHOW_VERSION=true
-                has_component=true
+                has_action=true
                 shift
                 ;;
             --dry-run)
@@ -377,18 +287,15 @@ parse_args() {
                 exit 0
                 ;;
             *)
-                # Legacy mode: treat bare args as language names
-                has_component=true
-                INSTALL_RULES=true
-                RULE_LANGS_EXPLICIT=true
-                RULE_LANGS+=("$1")
-                shift
+                error "Unknown option: $1"
+                error "Run '$(basename "$0") --help' for available options."
+                exit 1
                 ;;
         esac
     done
 
-    # Only utility flags (--dry-run, --force) with no component selection
-    if ! $has_component; then
+    # Only modifier flags (--dry-run, --force) with no action
+    if ! $has_action; then
         if [[ -t 0 && -t 1 ]]; then
             INTERACTIVE=true
         else
@@ -598,7 +505,6 @@ interactive_menu() {
             rules-ts)            INSTALL_RULES=true; RULE_LANGS+=("typescript") ;;
             rules-go)            INSTALL_RULES=true; RULE_LANGS+=("golang") ;;
             plugins-essential)   INSTALL_PLUGINS=true; PLUGIN_GROUPS+=("essential") ;;
-            plugins-extended)    INSTALL_PLUGINS=true; PLUGIN_GROUPS+=("extended") ;;
             plugins-claude-mem)  INSTALL_PLUGINS=true; PLUGIN_GROUPS+=("claude-mem") ;;
             plugins-ai-research) INSTALL_PLUGINS=true; PLUGIN_GROUPS+=("ai-research") ;;
             mcp)                 INSTALL_MCP=true ;;
@@ -960,30 +866,17 @@ install_plugins() {
 # --- Uninstall ----------------------------------------------------------
 
 uninstall() {
-    local components=("${UNINSTALL_COMPONENTS[@]}")
-
-    # If no specific components, uninstall everything
-    if [[ ${#components[@]} -eq 0 ]]; then
-        components=(claude-md settings rules skills lessons hooks plugins mcp)
-    fi
-
     echo ""
     warn "The following will be removed:"
-    for comp in "${components[@]}"; do
-        case "$comp" in
-            claude-md) echo "  - $CLAUDE_DIR/CLAUDE.md" ;;
-            settings)  echo "  - $CLAUDE_DIR/settings.json" ;;
-            rules)     echo "  - $CLAUDE_DIR/rules/" ;;
-            skills)    echo "  - $CLAUDE_DIR/skills/ (installer-managed only)" ;;
-            lessons)   echo "  - $CLAUDE_DIR/lessons.md" ;;
-            hooks)     echo "  - $CLAUDE_DIR/hooks/ (installer-managed only)" ;;
-            plugins)   echo "  - Installed plugins (requires claude CLI)" ;;
-            mcp)       echo "  - MCP server: lark-mcp (requires claude CLI)" ;;
-        esac
-    done
-    if [[ -f "$VERSION_STAMP_FILE" ]]; then
-        echo "  - $VERSION_STAMP_FILE"
-    fi
+    echo "  - $CLAUDE_DIR/CLAUDE.md"
+    echo "  - $CLAUDE_DIR/settings.json (backed up first)"
+    echo "  - $CLAUDE_DIR/rules/"
+    echo "  - $CLAUDE_DIR/skills/ (installer-managed only)"
+    echo "  - $CLAUDE_DIR/lessons.md"
+    echo "  - $CLAUDE_DIR/hooks/ (installer-managed only)"
+    echo "  - Installed plugins (requires claude CLI)"
+    echo "  - MCP server: lark-mcp (requires claude CLI)"
+    [[ -f "$VERSION_STAMP_FILE" ]] && echo "  - $VERSION_STAMP_FILE"
     echo ""
 
     if $DRY_RUN; then
@@ -996,71 +889,56 @@ uninstall() {
         exit 0
     fi
 
-    for comp in "${components[@]}"; do
-        case "$comp" in
-            claude-md)
-                rm -f "$CLAUDE_DIR/CLAUDE.md" && ok "Removed CLAUDE.md" ;;
-            settings)
-                if [[ -f "$CLAUDE_DIR/settings.json" ]]; then
-                    cp "$CLAUDE_DIR/settings.json" "$CLAUDE_DIR/settings.json.bak"
-                    ok "Backed up settings.json -> settings.json.bak"
-                    rm -f "$CLAUDE_DIR/settings.json" && ok "Removed settings.json"
-                fi
-                ;;
-            rules)
-                rm -rf "$CLAUDE_DIR/rules" && ok "Removed rules/" ;;
-            skills)
-                # Only remove skills that ship with this repo
-                if [[ -d "$SCRIPT_DIR/skills" ]]; then
-                    for skill_dir in "$SCRIPT_DIR"/skills/*/; do
-                        [[ -d "$skill_dir" ]] || continue
-                        local skill
-                        skill=$(basename "$skill_dir")
-                        rm -rf "$CLAUDE_DIR/skills/$skill" && ok "Removed skill: $skill"
-                    done
-                else
-                    rm -rf "$CLAUDE_DIR/skills" && ok "Removed skills/"
-                fi
-                ;;
-            lessons)
-                rm -f "$CLAUDE_DIR/lessons.md" && ok "Removed lessons.md" ;;
-            hooks)
-                # Only remove hooks that ship with this repo
-                if [[ -d "$SCRIPT_DIR/hooks" ]]; then
-                    for hook_file in "$SCRIPT_DIR"/hooks/*; do
-                        [[ -f "$hook_file" ]] || continue
-                        local fname
-                        fname=$(basename "$hook_file")
-                        rm -f "$CLAUDE_DIR/hooks/$fname" && ok "Removed hook: $fname"
-                    done
-                else
-                    rm -rf "$CLAUDE_DIR/hooks" && ok "Removed hooks/"
-                fi
-                ;;
-            plugins)
-                if command -v claude &>/dev/null; then
-                    local all_plugins=("${PLUGINS_ESSENTIAL[@]}" "${PLUGINS_CLAUDE_MEM[@]}" "${PLUGINS_AI_RESEARCH[@]}")
-                    for entry in "${all_plugins[@]}"; do
-                        local plugin_name="${entry%%@*}"
-                        claude plugin uninstall "$entry" 2>/dev/null && \
-                            ok "Uninstalled plugin: $plugin_name" || \
-                            warn "Could not uninstall: $plugin_name"
-                    done
-                else
-                    warn "Claude CLI not found — cannot uninstall plugins"
-                fi
-                ;;
-            mcp)
-                if command -v claude &>/dev/null; then
-                    claude mcp remove lark-mcp 2>/dev/null && \
-                        ok "Removed MCP server: lark-mcp" || \
-                        warn "Could not remove lark-mcp"
-                else
-                    warn "Claude CLI not found — cannot remove MCP servers"
-                fi
-                ;;
-        esac
-    done
+    rm -f "$CLAUDE_DIR/CLAUDE.md" && ok "Removed CLAUDE.md"
+
+    if [[ -f "$CLAUDE_DIR/settings.json" ]]; then
+        cp "$CLAUDE_DIR/settings.json" "$CLAUDE_DIR/settings.json.bak"
+        ok "Backed up settings.json -> settings.json.bak"
+        rm -f "$CLAUDE_DIR/settings.json" && ok "Removed settings.json"
+    fi
+
+    rm -rf "$CLAUDE_DIR/rules" && ok "Removed rules/"
+
+    # Only remove skills that ship with this repo
+    if [[ -d "$SCRIPT_DIR/skills" ]]; then
+        for skill_dir in "$SCRIPT_DIR"/skills/*/; do
+            [[ -d "$skill_dir" ]] || continue
+            local skill
+            skill=$(basename "$skill_dir")
+            rm -rf "$CLAUDE_DIR/skills/$skill" && ok "Removed skill: $skill"
+        done
+    else
+        rm -rf "$CLAUDE_DIR/skills" && ok "Removed skills/"
+    fi
+
+    rm -f "$CLAUDE_DIR/lessons.md" && ok "Removed lessons.md"
+
+    # Only remove hooks that ship with this repo
+    if [[ -d "$SCRIPT_DIR/hooks" ]]; then
+        for hook_file in "$SCRIPT_DIR"/hooks/*; do
+            [[ -f "$hook_file" ]] || continue
+            local fname
+            fname=$(basename "$hook_file")
+            rm -f "$CLAUDE_DIR/hooks/$fname" && ok "Removed hook: $fname"
+        done
+    else
+        rm -rf "$CLAUDE_DIR/hooks" && ok "Removed hooks/"
+    fi
+
+    if command -v claude &>/dev/null; then
+        local all_plugins=("${PLUGINS_ESSENTIAL[@]}" "${PLUGINS_CLAUDE_MEM[@]}" "${PLUGINS_AI_RESEARCH[@]}")
+        for entry in "${all_plugins[@]}"; do
+            local plugin_name="${entry%%@*}"
+            claude plugin uninstall "$entry" 2>/dev/null && \
+                ok "Uninstalled plugin: $plugin_name" || \
+                warn "Could not uninstall: $plugin_name"
+        done
+        claude mcp remove lark-mcp 2>/dev/null && \
+            ok "Removed MCP server: lark-mcp" || \
+            warn "Could not remove lark-mcp"
+    else
+        warn "Claude CLI not found — cannot uninstall plugins or MCP servers"
+    fi
 
     rm -f "$VERSION_STAMP_FILE"
     echo ""
@@ -1103,9 +981,13 @@ main() {
         INSTALL_LESSONS=true
         INSTALL_HOOKS=true
         INSTALL_PLUGINS=true
-        # MCP is NOT included in --all; use --mcp explicitly
-        if [[ ${#PLUGIN_GROUPS[@]} -eq 0 ]]; then
-            PLUGIN_GROUPS=("core")
+        if $EXPLICIT_ALL; then
+            # Explicit --all: install everything including MCP and all plugin groups
+            INSTALL_MCP=true
+            PLUGIN_GROUPS=("all")
+        else
+            # Implicit (non-TTY fallback): essential plugins only, no MCP
+            PLUGIN_GROUPS=("essential")
         fi
     fi
 
@@ -1164,11 +1046,10 @@ main() {
     echo ""
     info "Next steps:"
     echo "  1. Restart Claude Code for changes to take effect"
+    echo "  2. Customize CLAUDE.md for your specific projects"
     if $INSTALL_MCP; then
-        echo "  2. Replace YOUR_APP_ID/YOUR_APP_SECRET in Lark MCP config"
+        echo "  3. Replace YOUR_APP_ID/YOUR_APP_SECRET in Lark MCP config"
     fi
-    echo "  3. Customize CLAUDE.md for your specific projects"
-    echo "  4. Review settings.json and merge with your existing config"
     echo ""
 }
 

@@ -10,16 +10,19 @@
 - **Language rules opt-in**: Python/TypeScript/Go rules are off by default in interactive mode — only install what your projects need
 - **Automatic cleanup**: When selecting specific language rules, previously installed unselected language dirs are removed
 - **Arrow-key interactive menu**: ↑↓ navigate, Enter to toggle, Submit button to confirm
-- **New CLI flags**: `--plugins essential`, `--plugins claude-mem` for fine-grained plugin group control
+- **CLI simplified**: Removed 8 component-selection flags (`--rules`, `--plugins`, `--mcp`, `--skills`, `--lessons`, `--hooks`, `--claude-md`, `--settings`); only `--all`, `--uninstall`, `--version`, `--dry-run`, `--force` remain
+- **`--all` now installs everything**: Including MCP and all plugin groups (previously excluded MCP)
 
 ### Design Rationale
 - Addresses context accumulation issue (#7): default install was injecting ~9k tokens of rules (including unused languages) + heavy plugin skill lists into every session
 - Interactive menu replaces the need to remember CLI flags — users see all options at a glance with sensible defaults
+- CLI flag removal: component-selection flags are redundant with the interactive menu; `--all` is the only non-interactive install path needed
 - claude-mem separated as standalone toggle — it's the only plugin injecting ~3k tokens at SessionStart (observation index + session summary); other Extended plugins only register tool/skill names
-- Non-interactive fallback preserved: piped installs and `--all` behave as before for CI/automation
+- Non-interactive fallback preserved: piped installs (`curl | bash`) install essential plugins only (no MCP); explicit `--all` installs everything including MCP and all plugin groups
+- Unknown/removed CLI flags now exit with error instead of silently degrading
 
 ### Notes & Caveats
-- `--all` still installs Essential + Extended plugins (same as old `--plugins core`), not AI Research
+- `--all` now installs everything (all plugins, MCP, all language rules)
 - Remote install (`bash <(curl ...) --all`) requires `--all` flag now — bare remote install without args falls back to install-all since stdin is not a terminal
 - Windows `install.ps1` not yet updated with interactive menu or plugin group split
 

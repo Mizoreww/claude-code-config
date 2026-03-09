@@ -111,38 +111,30 @@ cd awesome-claude-code-config
 
 ```bash
 # Bash（macOS / Linux）
-./install.sh --all                      # 安装全部（非交互）
-./install.sh --rules python typescript  # Common + 指定语言规则
-./install.sh --plugins essential        # Essential 插件（13 个）
-./install.sh --plugins claude-mem       # 仅 claude-mem
-./install.sh --plugins all              # 全部插件（20 个）
-./install.sh --plugins ai-research      # 仅 AI 研究类插件（6 个）
-./install.sh --mcp                      # MCP（Lark）
+./install.sh              # 交互式选择器（自由选择要安装的组件）
+./install.sh --all        # 安装全部（非交互）
+./install.sh --dry-run    # 预览会安装什么
+./install.sh --uninstall  # 删除全部
+./install.sh --version    # 显示版本信息
 ```
 
 ```powershell
-# PowerShell（Windows）
-.\install.ps1 -Rules python,typescript         # 仅规则
-.\install.ps1 -Plugins                         # 仅核心插件（14 个）
-.\install.ps1 -Plugins -PluginGroup all        # 全部插件（20 个）
-.\install.ps1 -Plugins -PluginGroup ai-research # 仅 AI 研究类插件（6 个）
-.\install.ps1 -Mcp                             # MCP（Lark）
+# PowerShell（Windows）— 仍支持 -Rules, -Plugins, -Mcp 参数
+.\install.ps1                    # 安装全部
+.\install.ps1 -Uninstall        # 删除全部
+.\install.ps1 -Version          # 显示版本信息
 ```
 
 ### 卸载
 
 ```bash
-# Bash（macOS / Linux）
-./install.sh --uninstall                # 删除全部（含插件和 MCP）
-./install.sh --uninstall --rules        # 仅删除规则
-./install.sh --uninstall --force        # 跳过确认（CI/非交互环境）
+./install.sh --uninstall          # 删除全部（含插件和 MCP）
+./install.sh --uninstall --force  # 跳过确认（CI/非交互环境）
 ```
 
 ```powershell
-# PowerShell（Windows）
-.\install.ps1 -Uninstall                            # 删除全部（含插件和 MCP）
-.\install.ps1 -Uninstall -UninstallComponents rules  # 仅删除规则
-.\install.ps1 -Uninstall -Force                      # 跳过确认
+.\install.ps1 -Uninstall         # 删除全部（含插件和 MCP）
+.\install.ps1 -Uninstall -Force  # 跳过确认
 ```
 
 ### 版本信息
@@ -236,7 +228,7 @@ golang/       → gofmt、表驱动测试、gosec
 | **ralph-loop** | claude-plugins-official | 会话感知 AI 助手 REPL |
 | **commit-commands** | claude-plugins-official | Git 提交、清理分支、提交-推送-PR |
 
-**AI 研究插件**（6 个）— 用 `--plugins ai-research` 或 `--plugins all` 安装：
+**AI 研究插件**（6 个）— 在交互式菜单中选择，或通过 `--all` 安装：
 
 | 插件 | 市场 | 功能 |
 |------|------|------|

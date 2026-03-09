@@ -111,38 +111,30 @@ Use ↑↓ to navigate, Enter to toggle, navigate to Submit and press Enter to i
 
 ```bash
 # Bash (macOS / Linux)
-./install.sh --all                      # Install everything (non-interactive)
-./install.sh --rules python typescript  # Common + specific language rules
-./install.sh --plugins essential        # Essential plugins (13)
-./install.sh --plugins claude-mem       # claude-mem only
-./install.sh --plugins all              # All plugins (20)
-./install.sh --plugins ai-research      # AI research plugins only (6)
-./install.sh --mcp                      # MCP (Lark)
+./install.sh              # Interactive selector (choose what to install)
+./install.sh --all        # Install everything (non-interactive)
+./install.sh --dry-run    # Preview what would be installed
+./install.sh --uninstall  # Remove everything
+./install.sh --version    # Show version info
 ```
 
 ```powershell
-# PowerShell (Windows)
-.\install.ps1 -Rules python,typescript         # Rules only
-.\install.ps1 -Plugins                         # Core plugins only (14)
-.\install.ps1 -Plugins -PluginGroup all        # All plugins (20)
-.\install.ps1 -Plugins -PluginGroup ai-research # AI research plugins only (6)
-.\install.ps1 -Mcp                             # MCP (Lark)
+# PowerShell (Windows) — still supports -Rules, -Plugins, -Mcp flags
+.\install.ps1                    # Install everything
+.\install.ps1 -Uninstall        # Remove everything
+.\install.ps1 -Version          # Show version info
 ```
 
 ### Uninstall
 
 ```bash
-# Bash (macOS / Linux)
-./install.sh --uninstall                # Remove everything (incl. plugins & MCP)
-./install.sh --uninstall --rules        # Remove rules only
-./install.sh --uninstall --force        # Skip confirmation (CI/non-interactive)
+./install.sh --uninstall          # Remove everything (incl. plugins & MCP)
+./install.sh --uninstall --force  # Skip confirmation (CI/non-interactive)
 ```
 
 ```powershell
-# PowerShell (Windows)
-.\install.ps1 -Uninstall                            # Remove everything (incl. plugins & MCP)
-.\install.ps1 -Uninstall -UninstallComponents rules  # Remove rules only
-.\install.ps1 -Uninstall -Force                      # Skip confirmation
+.\install.ps1 -Uninstall         # Remove everything (incl. plugins & MCP)
+.\install.ps1 -Uninstall -Force  # Skip confirmation
 ```
 
 ### Version Info
@@ -236,7 +228,7 @@ golang/       → gofmt, table-driven tests, gosec
 | **ralph-loop** | claude-plugins-official | Session-aware AI assistant REPL |
 | **commit-commands** | claude-plugins-official | Git commit, clean branches, commit-push-PR |
 
-**AI Research plugins** (6) — install with `--plugins ai-research` or `--plugins all`:
+**AI Research plugins** (6) — select in the interactive menu or included with `--all`:
 
 | Plugin | Marketplace | What It Does |
 |--------|-------------|--------------|
