@@ -418,7 +418,7 @@ install_settings() {
         warn "  Cannot perform smart merge. Please merge manually:"
         warn "  Source: $SCRIPT_DIR/settings.json"
         warn "  Target: $CLAUDE_DIR/settings.json"
-        (( INSTALL_WARNINGS++ ))
+        (( INSTALL_WARNINGS++ )) || true
         return
     fi
 
@@ -476,7 +476,7 @@ install_settings() {
         rm -f "$merged"
         error "Merge produced invalid JSON — keeping existing file"
         warn "Please merge manually: $incoming -> $existing"
-        (( INSTALL_WARNINGS++ ))
+        (( INSTALL_WARNINGS++ )) || true
     fi
 }
 
@@ -673,7 +673,7 @@ install_plugins() {
                 ok "Plugin installed: $plugin_name"
             else
                 warn "Plugin $plugin_name could not be installed, skipping"
-                (( INSTALL_WARNINGS++ ))
+                (( INSTALL_WARNINGS++ )) || true
             fi
         fi
     done
