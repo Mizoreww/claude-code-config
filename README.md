@@ -6,7 +6,7 @@
 
 ![Statusline](assets/statusline.png)
 
-Production-ready configuration for [Claude Code](https://claude.com/claude-code) — one-command install of global instructions, multi-language coding rules (Python / TypeScript / Go), 20 curated plugins, custom skills (paper-reading, [adversarial-review](https://github.com/poteto/noodle/tree/main/.agents/skills/adversarial-review)), custom status bar, MCP integration, and a self-improvement loop that remembers corrections across sessions.
+Production-ready configuration for [Claude Code](https://claude.com/claude-code) — one-command install of global instructions, multi-language coding rules (Python / TypeScript / Go), 20 curated plugins, custom skills (paper-reading, [adversarial-review](https://github.com/poteto/noodle/tree/main/.agents/skills/adversarial-review), [humanizer](https://github.com/blader/humanizer)), custom status bar, MCP integration, and a self-improvement loop that remembers corrections across sessions.
 
 ## Showcase
 
@@ -25,7 +25,7 @@ Production-ready configuration for [Claude Code](https://claude.com/claude-code)
 ├── hooks/                 # Statusline with gradient progress bars (context + 5h usage)
 ├── mcp/                   # MCP server config (Lark-MCP)
 ├── plugins/               # Plugin installation guide (20 plugins, 5 marketplaces)
-├── skills/                # Custom skills (paper-reading, adversarial-review)
+├── skills/                # Custom skills (paper-reading, adversarial-review, humanizer)
 ├── docs/                  # Research paper summaries
 ├── images/                # Showcase screenshots
 ├── VERSION                # Semantic version number
@@ -264,6 +264,7 @@ CLAUDE.md includes a **Version Changelog** rule: when making version-level chang
 |-------|-------------|
 | **paper-reading** | Structured research paper summarization with auto-screenshot of key figures. Uses ar5iv HTML for arXiv papers, Playwright for figure capture, outputs standardized markdown (problem, method, experiments, insights). |
 | **[adversarial-review](https://github.com/poteto/noodle/tree/main/.agents/skills/adversarial-review)** | Cross-model adversarial code review. Spawns reviewers on the opposite AI model (Claude ↔ Codex) with distinct critical lenses (Skeptic, Architect, Minimalist), then synthesizes a structured verdict (PASS/CONTESTED/REJECT). |
+| **[humanizer](https://github.com/blader/humanizer)** | Detect and remove AI writing patterns from text. Based on Wikipedia's "Signs of AI writing" guide, identifies 24 patterns across content, language, style, and communication categories (significance inflation, AI vocabulary, em dash overuse, sycophantic tone, etc.) and rewrites text to sound natural. |
 
 Place custom skills in `skills/<name>/SKILL.md`.
 

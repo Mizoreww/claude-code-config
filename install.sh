@@ -336,7 +336,7 @@ interactive_menu() {
         "Common rules|Coding style, git, security, testing|1|rules-common"
         "Hooks|StatusLine display hook|1|hooks"
         "Lessons template|Cross-session learning framework|1|lessons"
-        "Custom skills|adversarial-review, paper-reading|1|skills"
+        "Custom skills|adversarial-review, paper-reading, humanizer|1|skills"
         "Python rules|PEP 8, pytest, type hints, bandit|0|rules-python"
         "TypeScript rules|Zod, Playwright, immutability|0|rules-ts"
         "Go rules|gofmt, table-driven tests, gosec|0|rules-go"

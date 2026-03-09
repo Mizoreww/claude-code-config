@@ -205,7 +205,7 @@ function Show-InteractiveMenu {
         @{ Label = "Common rules";         Desc = "Coding style, git, security, testing";           Default = $true;  Id = "rules-common" }
         @{ Label = "Hooks";                Desc = "StatusLine display hook";                        Default = $true;  Id = "hooks" }
         @{ Label = "Lessons template";     Desc = "Cross-session learning framework";               Default = $true;  Id = "lessons" }
-        @{ Label = "Custom skills";        Desc = "adversarial-review, paper-reading";              Default = $true;  Id = "skills" }
+        @{ Label = "Custom skills";        Desc = "adversarial-review, paper-reading, humanizer";   Default = $true;  Id = "skills" }
         @{ Label = "Python rules";         Desc = "PEP 8, pytest, type hints, bandit";              Default = $false; Id = "rules-python" }
         @{ Label = "TypeScript rules";     Desc = "Zod, Playwright, immutability";                  Default = $false; Id = "rules-ts" }
         @{ Label = "Go rules";             Desc = "gofmt, table-driven tests, gosec";               Default = $false; Id = "rules-go" }
