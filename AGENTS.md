@@ -34,6 +34,7 @@ Before the first substantive response in a session, ensure lessons context is lo
 
 ## Workflow
 
+- Web search: before searching, determine the current real date — prefer system command (`date '+%Y-%m-%d'`), fall back to web time API if system clock may be inaccurate. Include the year (and month if relevant) in search queries. Never rely solely on model knowledge or system prompt for the date.
 - Use explicit planning for non-trivial tasks
 - Verify before marking done (tests/logs where applicable)
 - Fix bugs directly and report what changed

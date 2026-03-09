@@ -1,4 +1,4 @@
-[Main English](https://github.com/Mizoreww/claude-code-config/blob/main/README.md) | [Main 中文](https://github.com/Mizoreww/claude-code-config/blob/main/README.zh-CN.md) | [Codex English](./README.md) | **Codex 中文**
+[Main English](https://github.com/Mizoreww/awesome-claude-code-config/blob/main/README.md) | [Main 中文](https://github.com/Mizoreww/awesome-claude-code-config/blob/main/README.zh-CN.md) | [Codex English](./README.md) | **Codex 中文**
 
 # Codex 配置
 
@@ -28,8 +28,8 @@ bash <(curl -fsSL https://raw.githubusercontent.com/Mizoreww/claude-code-config/
 本地安装：
 
 ```bash
-git clone -b codex https://github.com/Mizoreww/claude-code-config.git
-cd claude-code-config
+git clone -b codex https://github.com/Mizoreww/awesome-claude-code-config.git
+cd awesome-claude-code-config
 bash install.sh
 ```
 
@@ -95,7 +95,7 @@ skills/rules  → claude-rules、python-patterns、golang-patterns、frontend-pa
 | superpowers | [obra/superpowers](https://github.com/obra/superpowers) | 计划、调试、TDD 工作流 |
 | everything-claude-code | [affaan-m/everything-claude-code](https://github.com/affaan-m/everything-claude-code) | 语言模式、测试、安全、验证 |
 | anthropic skills packs | [anthropics/skills](https://github.com/anthropics/skills) | 文档处理、前端设计、画布/艺术、MCP builder |
-| AI research skills | [zechenzhangAGI/AI-research-SKILLs](https://github.com/zechenzhangAGI/AI-research-SKILLs) | 微调、后训练、推理服务、分布式训练、优化 |
+| AI research skills | [zechenzhangAGI/AI-research-SKILLs](https://github.com/zechenzhangAGI/AI-research-SKILLs) | 分词、微调、后训练、推理服务、分布式训练、优化 |
 
 本仓库内置本地技能：
 - `paper-reading`（`skills/paper-reading/SKILL.md`）— 结构化论文阅读与总结

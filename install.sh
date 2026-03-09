@@ -3,11 +3,11 @@ set -euo pipefail
 
 # ============================================================
 # Codex Configuration Installer
-# https://github.com/Mizoreww/claude-code-config
+# https://github.com/Mizoreww/awesome-claude-code-config
 # ============================================================
 
 CODEX_DIR="$HOME/.codex"
-REPO_URL="https://github.com/Mizoreww/claude-code-config"
+REPO_URL="https://github.com/Mizoreww/awesome-claude-code-config"
 VERSION_STAMP_FILE="$CODEX_DIR/.claude-code-config-version"
 INSTALLER="$CODEX_DIR/skills/.system/skill-installer/scripts/install-skill-from-github.py"
 
@@ -41,6 +41,7 @@ MANAGED_SKILLS=(
   python-patterns python-testing golang-patterns golang-testing frontend-patterns
   security-review tdd-workflow verification-loop api-design database-migrations
   using-superpowers systematic-debugging writing-plans test-driven-development
+  huggingface-tokenizers sentencepiece
   axolotl llama-factory peft unsloth
   grpo-rl-training openrlhf simpo trl-fine-tuning verl
   deepspeed pytorch-fsdp2 megatron-core ray-train
@@ -404,6 +405,7 @@ install_skills() {
 
   if [[ "$SKILL_GROUP" == "ai-research" || "$SKILL_GROUP" == "all" ]]; then
     install_skill_paths zechenzhangAGI/AI-research-SKILLs \
+      02-tokenization/huggingface-tokenizers 02-tokenization/sentencepiece \
       03-fine-tuning/axolotl 03-fine-tuning/llama-factory 03-fine-tuning/peft 03-fine-tuning/unsloth \
       06-post-training/grpo-rl-training 06-post-training/openrlhf 06-post-training/simpo 06-post-training/trl-fine-tuning 06-post-training/verl \
       08-distributed-training/deepspeed 08-distributed-training/pytorch-fsdp2 08-distributed-training/megatron-core 08-distributed-training/ray-train \

@@ -1,4 +1,4 @@
-[Main English](https://github.com/Mizoreww/claude-code-config/blob/main/README.md) | [Main 中文](https://github.com/Mizoreww/claude-code-config/blob/main/README.zh-CN.md) | **Codex English** | [Codex 中文](./README.zh-CN.md)
+[Main English](https://github.com/Mizoreww/awesome-claude-code-config/blob/main/README.md) | [Main 中文](https://github.com/Mizoreww/awesome-claude-code-config/blob/main/README.zh-CN.md) | **Codex English** | [Codex 中文](./README.zh-CN.md)
 
 # Codex Configuration
 
@@ -28,8 +28,8 @@ bash <(curl -fsSL https://raw.githubusercontent.com/Mizoreww/claude-code-config/
 Local install:
 
 ```bash
-git clone -b codex https://github.com/Mizoreww/claude-code-config.git
-cd claude-code-config
+git clone -b codex https://github.com/Mizoreww/awesome-claude-code-config.git
+cd awesome-claude-code-config
 bash install.sh
 ```
 
@@ -95,7 +95,7 @@ This keeps common principles and language-specific practices aligned.
 | superpowers | [obra/superpowers](https://github.com/obra/superpowers) | planning, debugging, TDD workflows |
 | everything-claude-code | [affaan-m/everything-claude-code](https://github.com/affaan-m/everything-claude-code) | language patterns, testing, security, verification |
 | anthropic skills packs | [anthropics/skills](https://github.com/anthropics/skills) | document tools, frontend design, canvas/art, MCP builder |
-| AI research skills | [zechenzhangAGI/AI-research-SKILLs](https://github.com/zechenzhangAGI/AI-research-SKILLs) | fine-tuning, post-training, inference, distributed training, optimization |
+| AI research skills | [zechenzhangAGI/AI-research-SKILLs](https://github.com/zechenzhangAGI/AI-research-SKILLs) | tokenization, fine-tuning, post-training, inference, distributed training, optimization |
 
 Bundled local skills in this repo:
 - `paper-reading` (`skills/paper-reading/SKILL.md`) — structured research paper summarization
