@@ -637,6 +637,9 @@ function Install-Hooks {
     # Ensure jq is available (required by statusline.sh)
     Install-Jq
 
+    # Install Nerd Font for statusline icons
+    Install-NerdFont
+
     # Check bash availability (required by statusline and SessionStart hooks)
     if (-not (Get-Command bash -ErrorAction SilentlyContinue)) {
         Write-Warn "bash not found in PATH. Statusline and SessionStart hooks require bash."
@@ -679,6 +682,61 @@ function Install-Jq {
     } else {
         Write-Warn "Could not download jq. Install it manually: https://jqlang.github.io/jq/download/"
         Write-Warn "Or run: winget install jqlang.jq"
+    }
+}
+
+function Install-NerdFont {
+    # Check if already installed
+    $fontDir = Join-Path $env:LOCALAPPDATA "Microsoft\Windows\Fonts"
+    if ((Test-Path $fontDir) -and (Get-ChildItem $fontDir -Filter "*JetBrainsMono*Nerd*" -ErrorAction SilentlyContinue)) {
+        return
+    }
+
+    if ($DryRun) {
+        Write-Info "Would download and install JetBrainsMono Nerd Font"
+        return
+    }
+
+    Write-Info "Installing JetBrainsMono Nerd Font for statusline icons..."
+
+    $tmpZip = Join-Path ([System.IO.Path]::GetTempPath()) "JetBrainsMono-NerdFont.zip"
+    $url = "https://github.com/ryanoasis/nerd-fonts/releases/latest/download/JetBrainsMono.zip"
+
+    $ok = Invoke-Retry -MaxAttempts 3 -DelaySeconds 2 -Description "Download Nerd Font" -Action {
+        [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+        Invoke-WebRequest -Uri $url -OutFile $tmpZip -UseBasicParsing
+    }
+    if (-not $ok) {
+        Write-Warn "Could not download Nerd Font - statusline will use text fallback"
+        return
+    }
+
+    try {
+        $tmpExtract = Join-Path ([System.IO.Path]::GetTempPath()) "NerdFont-$(Get-Random)"
+        Expand-Archive -Path $tmpZip -DestinationPath $tmpExtract -Force
+
+        # Install to user fonts directory
+        if (-not (Test-Path $fontDir)) {
+            New-Item -ItemType Directory -Path $fontDir -Force | Out-Null
+        }
+
+        $regPath = "HKCU:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Fonts"
+        Get-ChildItem $tmpExtract -Filter "*.ttf" | ForEach-Object {
+            $dst = Join-Path $fontDir $_.Name
+            Copy-Item $_.FullName $dst -Force
+            # Register font in user registry
+            $fontName = [System.IO.Path]::GetFileNameWithoutExtension($_.Name) + " (TrueType)"
+            New-ItemProperty -Path $regPath -Name $fontName -Value $dst -PropertyType String -Force | Out-Null
+        }
+
+        Remove-Item $tmpExtract -Recurse -Force -ErrorAction SilentlyContinue
+        Remove-Item $tmpZip -Force -ErrorAction SilentlyContinue
+
+        Write-Ok "JetBrainsMono Nerd Font installed"
+        Write-Warn "Set your terminal font to 'JetBrainsMono Nerd Font' for best icon display"
+    } catch {
+        Write-Warn "Could not install Nerd Font: $_"
+        Remove-Item $tmpZip -Force -ErrorAction SilentlyContinue
     }
 }
 
@@ -741,6 +799,14 @@ function Install-Plugins {
     Write-Info "Adding marketplaces..."
     foreach ($mp in $MARKETPLACE_LIST) {
         if (-not $neededMarketplaces.ContainsKey($mp.Name)) { continue }
+
+        # Skip if already installed
+        $mpDir = Join-Path $env:USERPROFILE ".claude\plugins\marketplaces\$($mp.Name)"
+        if (Test-Path $mpDir) {
+            Write-Ok "Marketplace already exists: $($mp.Name)"
+            continue
+        }
+
         if ($DryRun) {
             Write-Info "Would add marketplace: $($mp.Name) (github.com/$($mp.Repo))"
         } else {

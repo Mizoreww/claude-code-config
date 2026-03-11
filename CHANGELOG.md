@@ -1,5 +1,25 @@
 # Changelog
 
+## [1.6.0] - 2026-03-11
+
+### Features
+- **jq auto-install (bash)**: `install.sh` now auto-installs jq via package managers (brew/apt/dnf/yum/pacman/apk) or downloads a pre-built binary to `~/.claude/bin/jq` — settings.json smart merge no longer silently skips
+- **Conda environment in statusline**: Shows active conda environment name (except `base`) between directory and git branch segments
+- **Marketplace skip on re-install**: Installer checks if `~/.claude/plugins/marketplaces/{name}` exists before retrying, saving ~75s on repeated installs
+- **Emoji detection + text fallback**: Statusline detects UTF-8 locale, terminal type, and Nerd Font availability — falls back to text labels (`M:`, `D:`, `py:`, `br:`) on unsupported terminals
+- **Nerd Font auto-install**: Installers download and install JetBrainsMono Nerd Font for Powerline git branch icon; prompts user to set terminal font
+
+### Design Rationale
+- jq install uses a layered approach: check PATH first, then `~/.claude/bin/`, then package managers (with sudo), then static binary download (no sudo needed) — covers CI, macOS, Linux desktop, and minimal containers
+- Conda display excluded `base` environment as it provides no useful signal — users activate named envs for project work
+- Marketplace directory check is the fastest reliable indicator of "already registered" — avoids 5x3s retry timeout from `claude plugin marketplace add` returning errors on duplicates
+- Icon fallback chain: emoji (UTF-8 terminal) > Nerd Font (fc-list detected) > text labels (dumb/non-UTF-8 terminals) — ensures statusline is always readable
+
+### Notes & Caveats
+- jq binary download requires `curl` or `wget` and internet access; package manager installs may require `sudo`
+- Nerd Font download is ~30MB; users must manually set their terminal font after installation
+- Conda display reads `$CONDA_DEFAULT_ENV` — works with conda activate but not with direct `python` path manipulation
+
 ## [1.5.1] - 2026-03-09
 
 ### Features

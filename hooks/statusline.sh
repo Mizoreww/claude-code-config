@@ -15,7 +15,7 @@ if ! command -v jq &>/dev/null; then
     done
 fi
 if ! command -v jq &>/dev/null; then
-    printf "\xf0\x9f\xa7\xa0 Claude (jq not found - run install.ps1 or install jq)"
+    printf "Claude (jq not found - run installer or install jq)"
     exit 0
 fi
 
@@ -34,6 +34,28 @@ ctx_size=$(echo "$input" | jq -r '.context_window.context_window_size // 0')
 git_branch=""
 if git -C "$cwd" rev-parse --is-inside-work-tree --no-optional-locks 2>/dev/null | grep -q true; then
     git_branch=$(git -C "$cwd" symbolic-ref --short HEAD 2>/dev/null || git -C "$cwd" rev-parse --short HEAD 2>/dev/null || echo "")
+fi
+
+# --- Icon detection ---
+_use_emoji=true
+case "${LANG:-}${LC_ALL:-}${LC_CTYPE:-}" in
+    *[Uu][Tt][Ff]-8*|*[Uu][Tt][Ff]8*) ;;
+    *) _use_emoji=false ;;
+esac
+case "${TERM:-dumb}" in
+    dumb|linux|vt100|vt220) _use_emoji=false ;;
+esac
+
+if $_use_emoji; then
+    ICON_MODEL="\xf0\x9f\xa7\xa0"     # 🧠
+    ICON_DIR="\xf0\x9f\x93\x82"       # 📂
+    ICON_CONDA="\xf0\x9f\x90\x8d"     # 🐍
+    ICON_GIT="\xe2\x8e\x87"           # ⎇ (standard Unicode, safe everywhere)
+else
+    ICON_MODEL="M:"
+    ICON_DIR="D:"
+    ICON_CONDA="py:"
+    ICON_GIT="br:"
 fi
 
 # --- 5-hour usage from API (non-blocking, async refresh) ---
@@ -152,6 +174,7 @@ C_DIR="\033[38;5;117m"
 C_GIT="\033[38;5;116m"
 C_SEP="\033[38;5;240m"
 C_LABEL="\033[38;5;250m"
+C_CONDA="\033[38;5;113m"   # soft green (Python/conda)
 C_R="\033[0m"
 
 # Gradient: soft green -> green -> yellow-green -> yellow -> orange -> red -> dark red
@@ -221,14 +244,21 @@ fmt_resets() {
 sep="${C_SEP} \xe2\x94\x82 $C_R"
 
 # --- Assemble (single line) ---
-out="\xf0\x9f\xa7\xa0 ${C_MODEL}${model}${C_R}"
+out="${ICON_MODEL} ${C_MODEL}${model}${C_R}"
 
 if [ -n "$dir_name" ]; then
-    out+="${sep}\xf0\x9f\x93\x82 ${C_DIR}${dir_name}${C_R}"
+    out+="${sep}${ICON_DIR} ${C_DIR}${dir_name}${C_R}"
+fi
+
+# Conda environment (basename handles prefix-style activations like /path/to/env)
+conda_env="${CONDA_DEFAULT_ENV:-}"
+conda_env="$(basename "$conda_env")"
+if [ -n "$conda_env" ] && [ "$conda_env" != "base" ]; then
+    out+="${sep}${ICON_CONDA} ${C_CONDA}${conda_env}${C_R}"
 fi
 
 if [ -n "$git_branch" ]; then
-    out+="${sep}${C_GIT}\xee\x82\xa0 ${git_branch}${C_R}"
+    out+="${sep}${C_GIT}${ICON_GIT} ${git_branch}${C_R}"
 fi
 
 # Context bar

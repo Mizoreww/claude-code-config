@@ -48,6 +48,116 @@ retry() {
     return 1
 }
 
+# Install jq if not available (needed for settings merge & statusline)
+install_jq() {
+    command -v jq &>/dev/null && return 0
+    # Check ~/.claude/bin/jq
+    if [[ -x "$CLAUDE_DIR/bin/jq" ]]; then
+        export PATH="$CLAUDE_DIR/bin:$PATH"; return 0
+    fi
+
+    if $DRY_RUN; then
+        info "Would install jq (not found in PATH or $CLAUDE_DIR/bin/)"
+        return 0
+    fi
+
+    info "jq not found, attempting to install..."
+
+    # 1) Download pre-built binary (no sudo, preferred for CI/headless)
+    local os arch
+    os="$(uname -s | tr '[:upper:]' '[:lower:]')"
+    case "$os" in darwin) os="macos";; linux) os="linux";; esac
+    arch="$(uname -m)"
+    case "$arch" in x86_64) arch="amd64";; aarch64|arm64) arch="arm64";; esac
+
+    if [[ -n "${os:-}" && -n "${arch:-}" ]]; then
+        local url="https://github.com/jqlang/jq/releases/latest/download/jq-${os}-${arch}"
+        mkdir -p "$CLAUDE_DIR/bin"
+        if curl -fsSL "$url" -o "$CLAUDE_DIR/bin/jq" 2>/dev/null || \
+           wget -qO "$CLAUDE_DIR/bin/jq" "$url" 2>/dev/null; then
+            chmod +x "$CLAUDE_DIR/bin/jq"
+            export PATH="$CLAUDE_DIR/bin:$PATH"
+            ok "jq installed to $CLAUDE_DIR/bin/jq"
+            return 0
+        fi
+    fi
+
+    # 2) Package manager chain (fallback, may need sudo)
+    if command -v brew &>/dev/null; then
+        brew install jq &>/dev/null && { ok "jq installed via brew"; return 0; }
+    fi
+    if command -v sudo &>/dev/null; then
+        for pm_cmd in "apt-get install -y jq" "dnf install -y jq" \
+                      "yum install -y jq" "pacman -S --noconfirm jq" "apk add jq"; do
+            local pm="${pm_cmd%% *}"
+            command -v "$pm" &>/dev/null && sudo $pm_cmd &>/dev/null && { ok "jq installed via $pm"; return 0; }
+        done
+    fi
+
+    warn "Could not install jq automatically"
+    return 1
+}
+
+# Install JetBrainsMono Nerd Font for statusline icons
+install_nerd_font() {
+    # Check if already installed
+    local font_dir
+    case "$(uname -s)" in
+        Darwin) font_dir="$HOME/Library/Fonts" ;;
+        *)      font_dir="$HOME/.local/share/fonts" ;;
+    esac
+    # Check by font files directly (works without fontconfig)
+    if ls "$font_dir"/JetBrainsMonoNerd* &>/dev/null 2>&1; then
+        return 0
+    fi
+    # Also check via fc-list if available
+    if command -v fc-list &>/dev/null; then
+        if fc-list 2>/dev/null | grep -qi "JetBrainsMono.*Nerd"; then
+            return 0
+        fi
+    fi
+
+    if $DRY_RUN; then
+        info "Would download and install JetBrainsMono Nerd Font"
+        return 0
+    fi
+
+    info "Installing JetBrainsMono Nerd Font for statusline icons..."
+    mkdir -p "$font_dir"
+
+    local tmpzip
+    tmpzip="$(mktemp -t nerd-font-XXXXXX.zip 2>/dev/null || mktemp /tmp/nerd-font-XXXXXX.zip)"
+    local url="https://github.com/ryanoasis/nerd-fonts/releases/latest/download/JetBrainsMono.zip"
+
+    if curl -fsSL "$url" -o "$tmpzip" 2>/dev/null || \
+       wget -qO "$tmpzip" "$url" 2>/dev/null; then
+        if command -v unzip &>/dev/null; then
+            unzip -oq "$tmpzip" -d "$font_dir" '*.ttf' 2>/dev/null
+        else
+            warn "unzip not found — cannot extract Nerd Font"
+            rm -f "$tmpzip"
+            return 1
+        fi
+        rm -f "$tmpzip"
+        # Verify extraction succeeded
+        if ! ls "$font_dir"/JetBrainsMonoNerd* &>/dev/null 2>&1; then
+            warn "Nerd Font extraction failed — no font files found"
+            return 1
+        fi
+        # Refresh font cache
+        if command -v fc-cache &>/dev/null; then
+            fc-cache -f "$font_dir" 2>/dev/null || true
+        fi
+        ok "JetBrainsMono Nerd Font installed to $font_dir"
+        warn "Set your terminal font to 'JetBrainsMono Nerd Font' for best icon display"
+        return 0
+    fi
+
+    rm -f "$tmpzip"
+    warn "Could not download Nerd Font — statusline will use text fallback"
+    return 1
+}
+
 # --- Remote install detection -------------------------------------------
 
 detect_script_dir() {
@@ -583,6 +693,7 @@ install_settings() {
     fi
 
     # File exists: smart merge with jq if available
+    install_jq || true
     if ! command -v jq &>/dev/null; then
         warn "settings.json already exists and jq is not installed"
         warn "  Cannot perform smart merge. Please merge manually:"
@@ -774,6 +885,12 @@ install_hooks() {
             ok "Hook installed: $fname"
         fi
     done
+
+    # Ensure jq is available (required by statusline hook)
+    install_jq || true
+
+    # Install Nerd Font for statusline icons
+    install_nerd_font || true
 }
 
 install_mcp() {
@@ -860,6 +977,13 @@ install_plugins() {
         local marketplace="${entry%%|*}"
         local repo="${entry##*|}"
         [[ "$needed_marketplaces" != *"|$marketplace|"* ]] && continue
+
+        # Skip if already installed
+        if [[ -d "$HOME/.claude/plugins/marketplaces/$marketplace" ]]; then
+            ok "Marketplace already exists: $marketplace"
+            continue
+        fi
+
         if $DRY_RUN; then
             info "Would add marketplace: $marketplace (github.com/$repo)"
         else
