@@ -91,7 +91,7 @@ Running `./install.sh` with no arguments launches an interactive menu where you 
     [x] Common rules           Coding style, git, security, testing
     [x] Hooks                  StatusLine display hook
     [x] Lessons template       Cross-session learning framework
-    [x] Custom skills          adversarial-review, paper-reading, humanizer
+    [x] Custom skills          adversarial-review, paper-reading, humanizer, update_config
 
   Language Rules  (only install what your projects need)
     [ ] Python                 PEP 8, pytest, type hints, bandit

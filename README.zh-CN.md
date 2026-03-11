@@ -91,7 +91,7 @@ cd awesome-claude-code-config
     [x] Common rules           编码规范、git、安全、测试
     [x] Hooks                  StatusLine 状态栏
     [x] Lessons template       跨 session 学习框架
-    [x] Custom skills          adversarial-review, paper-reading, humanizer
+    [x] Custom skills          adversarial-review, paper-reading, humanizer, update_config
 
   Language Rules（按需选择）
     [ ] Python                 PEP 8, pytest, type hints, bandit
