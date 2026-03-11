@@ -12,7 +12,7 @@ Production-ready configuration for [Codex CLI](https://github.com/openai/codex) 
 ├── config.toml            # Codex settings (model, permissions, MCP, lessons injection)
 ├── agents/                # Multi-agent role configs
 ├── lessons.md             # Self-correction source log
-├── skills/                # Custom skills (paper-reading, adversarial-review, humanizer)
+├── skills/                # Bundled local skills (paper-reading, adversarial-review, humanizer)
 ├── VERSION                # Installer version
 └── install.sh             # One-command installer
 ```
@@ -92,10 +92,15 @@ This keeps common principles and language-specific practices aligned.
 
 | Skill Set | Source | Coverage |
 |----------|--------|----------|
-| superpowers | [obra/superpowers](https://github.com/obra/superpowers) | planning, debugging, TDD workflows |
+| superpowers | [obra/superpowers](https://github.com/obra/superpowers) | full native superpowers set, including brainstorming, plan execution, review handoff, worktrees |
 | everything-claude-code | [affaan-m/everything-claude-code](https://github.com/affaan-m/everything-claude-code) | language patterns, testing, security, verification |
 | anthropic skills packs | [anthropics/skills](https://github.com/anthropics/skills) | document tools, frontend design, canvas/art, MCP builder |
 | AI research skills | [zechenzhangAGI/AI-research-SKILLs](https://github.com/zechenzhangAGI/AI-research-SKILLs) | tokenization, fine-tuning, post-training, inference, distributed training, optimization |
+
+Superpowers are installed using the repo's current native-discovery flow:
+- clone to `~/.codex/superpowers`
+- symlink `~/.codex/superpowers/skills` to `~/.agents/skills/superpowers`
+- clean up the legacy partial-copy install (`using-superpowers`, `systematic-debugging`, `writing-plans`, `test-driven-development`) under `~/.codex/skills`
 
 Bundled local skills in this repo:
 - `paper-reading` (`skills/paper-reading/SKILL.md`) — structured research paper summarization

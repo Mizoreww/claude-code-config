@@ -10,6 +10,10 @@ CODEX_DIR="$HOME/.codex"
 REPO_URL="https://github.com/Mizoreww/awesome-claude-code-config"
 VERSION_STAMP_FILE="$CODEX_DIR/.claude-code-config-version"
 INSTALLER="$CODEX_DIR/skills/.system/skill-installer/scripts/install-skill-from-github.py"
+SUPERPOWERS_REPO_URL="https://github.com/obra/superpowers.git"
+SUPERPOWERS_DIR="$CODEX_DIR/superpowers"
+AGENTS_SKILLS_DIR="$HOME/.agents/skills"
+SUPERPOWERS_LINK="$AGENTS_SKILLS_DIR/superpowers"
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -50,6 +54,13 @@ MANAGED_SKILLS=(
   paper-reading
   adversarial-review
   humanizer
+)
+
+LEGACY_SUPERPOWERS_SKILLS=(
+  using-superpowers
+  systematic-debugging
+  writing-plans
+  test-driven-development
 )
 
 detect_script_dir() {
@@ -363,6 +374,66 @@ install_skill_paths() {
   python3 "$INSTALLER" --repo "$repo" --path "$@" || warn "Skill install from $repo returned non-zero (possibly already installed)"
 }
 
+cleanup_legacy_superpowers_skills() {
+  local removed=false
+
+  for skill in "${LEGACY_SUPERPOWERS_SKILLS[@]}"; do
+    if [[ -e "$CODEX_DIR/skills/$skill" ]]; then
+      rm -rf "$CODEX_DIR/skills/$skill"
+      removed=true
+      ok "Removed legacy superpowers skill copy: $skill"
+    fi
+  done
+
+  if ! $removed; then
+    info "No legacy superpowers skill copies found under $CODEX_DIR/skills"
+  fi
+}
+
+install_superpowers() {
+  info "Installing full superpowers skill set..."
+
+  if $DRY_RUN; then
+    info "Would clone or update: $SUPERPOWERS_REPO_URL -> $SUPERPOWERS_DIR"
+    info "Would create symlink: $SUPERPOWERS_LINK -> $SUPERPOWERS_DIR/skills"
+    info "Would remove legacy copied superpowers skills from $CODEX_DIR/skills"
+    return 0
+  fi
+
+  if ! command -v git >/dev/null 2>&1; then
+    warn "git not found. Skip full superpowers install."
+    return 0
+  fi
+
+  if [[ -d "$SUPERPOWERS_DIR/.git" ]]; then
+    (
+      cd "$SUPERPOWERS_DIR"
+      git pull --ff-only
+    ) || warn "Failed to update existing superpowers repo at $SUPERPOWERS_DIR"
+  elif [[ -e "$SUPERPOWERS_DIR" ]]; then
+    warn "$SUPERPOWERS_DIR exists but is not a git repo -- skipping full superpowers install"
+    return 0
+  else
+    git clone "$SUPERPOWERS_REPO_URL" "$SUPERPOWERS_DIR" || {
+      warn "Failed to clone superpowers repo"
+      return 0
+    }
+    ok "Cloned superpowers repo to $SUPERPOWERS_DIR"
+  fi
+
+  mkdir -p "$AGENTS_SKILLS_DIR"
+
+  if [[ -e "$SUPERPOWERS_LINK" && ! -L "$SUPERPOWERS_LINK" ]]; then
+    warn "$SUPERPOWERS_LINK exists and is not a symlink -- skipping link creation"
+    return 0
+  fi
+
+  ln -sfn "$SUPERPOWERS_DIR/skills" "$SUPERPOWERS_LINK"
+  ok "Linked superpowers skills into $SUPERPOWERS_LINK"
+
+  cleanup_legacy_superpowers_skills
+}
+
 install_local_skills() {
   for skill_dir in "$SCRIPT_DIR"/skills/*/; do
     [[ -d "$skill_dir" ]] || continue
@@ -381,30 +452,36 @@ install_local_skills() {
 install_skills() {
   info "Installing skills (group: $SKILL_GROUP)..."
 
+  local remote_installer_available=true
   if [[ ! -f "$INSTALLER" ]]; then
+    remote_installer_available=false
     warn "skill-installer not found at $INSTALLER"
-    warn "Install Codex system skill-installer first, then rerun."
-    install_local_skills
-    return 0
+    warn "Remote skill packs that depend on it will be skipped."
   fi
 
   if [[ "$SKILL_GROUP" == "core" || "$SKILL_GROUP" == "all" ]]; then
-    install_skill_paths anthropics/skills \
-      skills/frontend-design skills/pdf skills/docx skills/pptx skills/xlsx \
-      skills/canvas-design skills/algorithmic-art skills/mcp-builder
+    install_superpowers
 
-    install_skill_paths affaan-m/everything-claude-code \
-      skills/python-patterns skills/python-testing skills/golang-patterns skills/golang-testing \
-      skills/frontend-patterns skills/security-review skills/tdd-workflow skills/verification-loop \
-      skills/api-design skills/database-migrations
+    if $remote_installer_available; then
+      install_skill_paths anthropics/skills \
+        skills/frontend-design skills/pdf skills/docx skills/pptx skills/xlsx \
+        skills/canvas-design skills/algorithmic-art skills/mcp-builder
 
-    install_skill_paths obra/superpowers \
-      skills/using-superpowers skills/systematic-debugging skills/writing-plans skills/test-driven-development
+      install_skill_paths affaan-m/everything-claude-code \
+        skills/python-patterns skills/python-testing skills/golang-patterns skills/golang-testing \
+        skills/frontend-patterns skills/security-review skills/tdd-workflow skills/verification-loop \
+        skills/api-design skills/database-migrations
+    fi
 
     install_local_skills
   fi
 
   if [[ "$SKILL_GROUP" == "ai-research" || "$SKILL_GROUP" == "all" ]]; then
+    if ! $remote_installer_available; then
+      warn "Skipping AI research skills because skill-installer is unavailable"
+      return 0
+    fi
+
     install_skill_paths zechenzhangAGI/AI-research-SKILLs \
       02-tokenization/huggingface-tokenizers 02-tokenization/sentencepiece \
       03-fine-tuning/axolotl 03-fine-tuning/llama-factory 03-fine-tuning/peft 03-fine-tuning/unsloth \
@@ -436,6 +513,8 @@ uninstall() {
         ;;
       skills)
         echo "  - Managed skills under $CODEX_DIR/skills"
+        echo "  - $SUPERPOWERS_DIR"
+        echo "  - $SUPERPOWERS_LINK"
         ;;
     esac
   done
@@ -477,6 +556,11 @@ uninstall() {
         for skill in "${MANAGED_SKILLS[@]}"; do
           rm -rf "$CODEX_DIR/skills/$skill"
         done
+        for skill in "${LEGACY_SUPERPOWERS_SKILLS[@]}"; do
+          rm -rf "$CODEX_DIR/skills/$skill"
+        done
+        rm -f "$SUPERPOWERS_LINK"
+        rm -rf "$SUPERPOWERS_DIR"
         ok "Removed managed skills"
         ;;
     esac

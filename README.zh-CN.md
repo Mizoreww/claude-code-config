@@ -12,7 +12,7 @@
 ├── config.toml            # Codex 设置（模型、权限、MCP、lessons 注入）
 ├── agents/                # Multi-agent 角色配置
 ├── lessons.md             # 自我纠正源日志
-├── skills/                # 自定义技能（paper-reading、adversarial-review、humanizer）
+├── skills/                # 仓库自带本地技能（paper-reading、adversarial-review、humanizer）
 ├── VERSION                # 安装器版本
 └── install.sh             # 一键安装脚本
 ```
@@ -92,10 +92,15 @@ skills/rules  → claude-rules、python-patterns、golang-patterns、frontend-pa
 
 | 技能集 | 来源 | 覆盖范围 |
 |-------|------|----------|
-| superpowers | [obra/superpowers](https://github.com/obra/superpowers) | 计划、调试、TDD 工作流 |
+| superpowers | [obra/superpowers](https://github.com/obra/superpowers) | 完整原生 superpowers 集合，含 brainstorming、计划执行、review handoff、worktree 等 |
 | everything-claude-code | [affaan-m/everything-claude-code](https://github.com/affaan-m/everything-claude-code) | 语言模式、测试、安全、验证 |
 | anthropic skills packs | [anthropics/skills](https://github.com/anthropics/skills) | 文档处理、前端设计、画布/艺术、MCP builder |
 | AI research skills | [zechenzhangAGI/AI-research-SKILLs](https://github.com/zechenzhangAGI/AI-research-SKILLs) | 分词、微调、后训练、推理服务、分布式训练、优化 |
+
+Superpowers 采用仓库当前的原生发现安装方式：
+- clone 到 `~/.codex/superpowers`
+- 将 `~/.codex/superpowers/skills` 符号链接到 `~/.agents/skills/superpowers`
+- 清理 `~/.codex/skills` 下旧的局部复制安装（`using-superpowers`、`systematic-debugging`、`writing-plans`、`test-driven-development`）
 
 本仓库内置本地技能：
 - `paper-reading`（`skills/paper-reading/SKILL.md`）— 结构化论文阅读与总结

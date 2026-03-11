@@ -201,6 +201,66 @@ Capture **3-8** key figures per paper.
 | "Uses a Transformer" | "Uses L-layer Transformer with input dim D, H attention heads, key modification is Z" |
 | "Has some limitations" | "Only validated in scenario X, does not account for distribution shift Y, assumption Z may not hold in practice" |
 
+### Mathematical Content Requirements (Critical)
+
+When the paper contains meaningful mathematical content, the summary must preserve it instead of flattening it into prose.
+
+Required standard:
+
+1. **Keep key equations** for the method, objective, loss, theorem statement, update rule, or scoring function.
+2. **Render equations in Typora-friendly LaTeX**:
+   - Use block math with `$$ ... $$`
+   - Use inline math with `$...$`
+   - Do **not** leave mathematical expressions in plain code blocks like ```text``` if they are intended to be read as formulas
+3. **Explain symbols immediately after formulas**
+   - Define the main variables, indices, and operators
+   - Prefer concise bullet definitions
+4. **Add a short “plain-language explanation” after each important formula**
+   - Explain what the formula is doing in the system
+   - Explain why it matters for training / inference / analysis
+5. **Translate metric names when useful**
+   - If the paper uses dense metric abbreviations, keep the original symbol and add a short Chinese explanation
+   - Example: `$E_{mpjpe}$`: average joint position error
+
+Minimum bar for empirical papers:
+
+- Problem formulation or training objective if provided
+- Core method equation(s)
+- Loss / reward / scoring equation(s)
+- Key update rule if central to the contribution
+
+Minimum bar for theoretical papers:
+
+- Formal problem statement
+- Main theorem statements or core bounds
+- Essential symbol definitions
+- Intuitive interpretation after each major result
+
+If the paper is light on math, do not invent formulas; only preserve what is actually central.
+
+### Related Work Formatting Requirements (Critical)
+
+When the paper explicitly organizes related work into named categories, the summary must preserve that structure.
+
+Required standard:
+
+1. **Preserve the paper's original related-work categories**
+   - Example: if the paper splits related work into `Physics-based Humanoid Locomotion` and `Human-Object Interaction`, keep those categories in the summary
+   - Do not flatten all baselines into one generic comparison if category structure matters
+2. **Prefer tables over long prose for related work**
+   - Use separate tables per category when helpful
+   - Recommended columns: method/direction, core goal, strengths, limitations, relation to this paper
+3. **Keep related-work tables visually subordinate to the main section**
+   - They should remain inside the broader related-work positioning discussion
+   - Do not promote each category to the same visual weight as major summary sections unless the user explicitly wants that
+   - When Markdown/Typora rendering allows, it is acceptable to wrap the grouped related-work tables in a small-font block such as `<div style="font-size: 0.92em;"> ... </div>`
+4. **Place baselines in the correct category before comparing them**
+   - Example: ASAP may belong under motion tracking / locomotion-style methods, while InterMimic belongs under HOI methods
+5. **After the category tables, optionally include one short synthesis table**
+   - Example: “This paper’s position” with 3-5 rows summarizing what it inherits and what it adds
+
+If the user explicitly asks for tables, do not rewrite the related-work section as long prose paragraphs.
+
 ### After identifying paper type, select the corresponding template
 
 All types share these sections:
@@ -219,7 +279,7 @@ All types share these sections:
 - **What problem does it solve?** Identify the specific gap in existing methods
 - **Key assumptions:** What constraints/limitations frame the research
 - **Why is it important?** The practical impact on the field
-- **Positioning among related work:** What are the 2-3 closest prior works? What is the key difference?
+- **Positioning among related work:** What are the 2-3 closest prior works? What is the key difference? Preserve any original related-work categories; prefer compact tables when comparing methods.
 ```
 
 ---
@@ -233,6 +293,7 @@ All types share these sections:
 ## Research Problem
 [shared section]
 - **Mathematical formulation:** (optional)
+- **Related work formatting:** Preserve original categories and summarize baselines with compact tables when appropriate
 
 <!-- Insert problem definition/motivation figure here if available -->
 
@@ -249,6 +310,12 @@ All types share these sections:
 - Modules/components and their responsibilities
 - Signal/data flow direction
 - **Why this design?** Advantages over the intuitive/naive approach
+
+### Mathematical Formulation and Symbols
+- Include the core equations in Typora-friendly LaTeX if the paper provides them
+- Define the main symbols right after the equations
+- Add 1-3 sentences of plain-language explanation after each key equation
+- If the method has multiple stages, separate formulas by stage (e.g. problem setup, model update, reward/loss, meta-objective)
 
 ### Core Component Details
 <!-- Insert algorithm flowchart here if available -->
@@ -269,6 +336,7 @@ All types share these sections:
 - **Key results:** Quantitative improvement margins (specific numbers + percentages)
 - **Ablation study:** Component contributions (removing X decreases performance by Y%)
 - **Surprising findings:** Any counterintuitive results
+- **Metric glossary:** For symbols like `$E_{xxx}$`, keep the original notation and add a short natural-language explanation
 
 ### Analysis (Interpretation)
 - Authors' explanation and attribution of results

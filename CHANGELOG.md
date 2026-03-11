@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.3.0] - 2026-03-11
+
+### Features
+- Installer now installs the full `obra/superpowers` repo via native skill discovery instead of copying only four skills
+- Installer creates `~/.agents/skills/superpowers` symlink and removes the legacy partial superpowers copies from `~/.codex/skills`
+- README and README.zh-CN now document the full superpowers installation model and native discovery paths
+
+### Design Rationale
+- Superpowers upstream now expects repo-level installation plus skill-directory symlinking; mirroring that upstream flow avoids partial installs such as missing `brainstorming`
+- Keeping superpowers as its own cloned repo makes updates straightforward with `git pull` and preserves the full upstream skill set without curating individual directories
+
+### Notes & Caveats
+- Existing users with a non-git directory at `~/.codex/superpowers` will need to resolve that path manually before the installer can manage it
+- If `~/.agents/skills/superpowers` already exists as a normal directory instead of a symlink, the installer warns and skips replacing it automatically
+
 ## [1.2.0] - 2026-03-09
 
 ### Features
