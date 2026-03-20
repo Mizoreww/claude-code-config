@@ -37,11 +37,25 @@ if git -C "$cwd" rev-parse --is-inside-work-tree --no-optional-locks 2>/dev/null
 fi
 
 # --- Icon detection ---
-_use_emoji=true
-case "${LANG:-}${LC_ALL:-}${LC_CTYPE:-}" in
-    *[Uu][Tt][Ff]-8*|*[Uu][Tt][Ff]8*) ;;
-    *) _use_emoji=false ;;
-esac
+_use_emoji=false
+# Non-Windows: check UTF-8 locale
+if [ -z "${USERPROFILE:-}" ]; then
+    case "${LANG:-}${LC_ALL:-}${LC_CTYPE:-}" in
+        *[Uu][Tt][Ff]-8*|*[Uu][Tt][Ff]8*) _use_emoji=true ;;
+    esac
+else
+    # Windows: only enable emoji for terminals known to support Unicode
+    # WT_SESSION  = Windows Terminal
+    # MSYSTEM     = Git Bash / mintty (MINGW64, MINGW32, MSYS, etc.)
+    # TERM_PROGRAM whitelist: vscode (VS Code integrated terminal)
+    if [ -n "${WT_SESSION:-}" ] || [ -n "${MSYSTEM:-}" ]; then
+        _use_emoji=true
+    fi
+    case "${TERM_PROGRAM:-}" in
+        vscode) _use_emoji=true ;;
+    esac
+fi
+# Always disable for known dumb terminals
 case "${TERM:-dumb}" in
     dumb|linux|vt100|vt220) _use_emoji=false ;;
 esac
