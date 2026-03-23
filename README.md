@@ -308,6 +308,8 @@ Requires Codex CLI installed and `OPENAI_API_KEY` set in your environment.
 - [**Anthropic Engineering**](https://www.anthropic.com/engineering) by Anthropic — Engineering blog covering agent development, evaluation methods, and building reliable AI systems
 - [**OpenAI Engineering**](https://openai.com/news/engineering/) by OpenAI — Engineering blog sharing technical insights on building and scaling AI systems
 - [**Claude Code Best Practice**](https://github.com/shanraisshan/claude-code-best-practice) by shanraisshan — Comprehensive best practices, workflows, and implementation patterns for Claude Code
+- [**cc-safe-setup**](https://github.com/yurukusa/cc-safe-setup) by yurukusa — One-command safety hooks for autonomous operation: `npx cc-safe-setup`. 8 built-in + 27 example hooks, safety audit, hook generator, and [settings.json reference](https://github.com/yurukusa/cc-safe-setup/blob/main/SETTINGS_REFERENCE.md)
+- [**Claude Code Hooks Cookbook**](https://github.com/yurukusa/claude-code-hooks/blob/main/COOKBOOK.md) by yurukusa — 20 copy-paste hook recipes from real GitHub Issues (compound commands, database protection, secret leaks, case-insensitive FS guard)
 
 ## License
 
