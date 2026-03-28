@@ -316,6 +316,7 @@ Requires Codex CLI installed and `OPENAI_API_KEY` set in your environment.
 - [**Anthropic Engineering**](https://www.anthropic.com/engineering) by Anthropic — Engineering blog covering agent development, evaluation methods, and building reliable AI systems
 - [**OpenAI Engineering**](https://openai.com/news/engineering/) by OpenAI — Engineering blog sharing technical insights on building and scaling AI systems
 - [**Claude Code Best Practice**](https://github.com/shanraisshan/claude-code-best-practice) by shanraisshan — Comprehensive best practices, workflows, and implementation patterns for Claude Code
+- [**claude-dash**](https://github.com/krabat-l/claude-dash) by krabat-l — Real-time statusline plugin showing context health, quota, cost, cache efficiency, and tool activity
 
 ## License
 
