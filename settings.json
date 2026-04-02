@@ -23,8 +23,7 @@
     "feature-dev@claude-plugins-official": true,
     "code-simplifier@claude-plugins-official": true,
     "ralph-loop@claude-plugins-official": true,
-    "commit-commands@claude-plugins-official": true,
-    "codex@openai-codex": true
+    "commit-commands@claude-plugins-official": true
   },
   "statusLine": {
     "type": "command",

@@ -161,7 +161,6 @@ function Confirm-Action {
 $PLUGINS_ESSENTIAL = @(
     "everything-claude-code@everything-claude-code"
     "superpowers@claude-plugins-official"
-    "code-review@claude-plugins-official"
     "context7@claude-plugins-official"
     "commit-commands@claude-plugins-official"
     "document-skills@anthropic-agent-skills"
@@ -172,7 +171,6 @@ $PLUGINS_ESSENTIAL = @(
     "frontend-design@claude-plugins-official"
     "example-skills@anthropic-agent-skills"
     "github@claude-plugins-official"
-    "codex@openai-codex"
 )
 
 $PLUGINS_CLAUDE_MEM = @(
@@ -210,23 +208,61 @@ $MARKETPLACE_LIST = @(
 # --- Interactive menu ------------------------------------------------------
 
 function Show-InteractiveMenu {
-    # Item format: label, description, default_on, id
-    $items = @(
-        @{ Label = "CLAUDE.md";            Desc = "Global instructions template";                   Default = $true;  Id = "claude-md" }
-        @{ Label = "settings.json";        Desc = "Smart-merged Claude Code settings";              Default = $true;  Id = "settings" }
-        @{ Label = "Common rules";         Desc = "Coding style, git, security, testing";           Default = $true;  Id = "rules-common" }
-        @{ Label = "Hooks";                Desc = "StatusLine display hook";                        Default = $true;  Id = "hooks" }
-        @{ Label = "Lessons template";     Desc = "Cross-session learning framework";               Default = $true;  Id = "lessons" }
-        @{ Label = "Custom skills";        Desc = "paper-reading, humanizer";                       Default = $true;  Id = "skills" }
-        @{ Label = "Python rules";         Desc = "PEP 8, pytest, type hints, bandit";              Default = $false; Id = "rules-python" }
-        @{ Label = "TypeScript rules";     Desc = "Zod, Playwright, immutability";                  Default = $false; Id = "rules-ts" }
-        @{ Label = "Go rules";             Desc = "gofmt, table-driven tests, gosec";               Default = $false; Id = "rules-go" }
-        @{ Label = "Plugins (14)";         Desc = "superpowers, code-review, codex, playwright, ...";      Default = $true;  Id = "plugins-essential" }
-        @{ Label = "claude-mem";           Desc = "Cross-session memory (~3k tokens/session)";      Default = $false; Id = "plugins-claude-mem" }
-        @{ Label = "AI Research plugins";  Desc = "fine-tuning, inference, optimization, ...";      Default = $false; Id = "plugins-ai-research" }
-        @{ Label = "claude-health";        Desc = "Health check & wellness dashboard";               Default = $false; Id = "plugins-health" }
-        @{ Label = "PUA";                 Desc = "AI agent productivity booster (pua, pua-en, pua-ja)"; Default = $false; Id = "plugins-pua" }
-        @{ Label = "Lark MCP server";      Desc = "Feishu/Lark integration";                        Default = $false; Id = "mcp" }
+    # Two-level menu: groups contain items, Enter opens sub-menu
+    $groups = @(
+        @{ Label = "Core"; Hint = ""; Items = @(
+            @{ Label = "CLAUDE.md";       Desc = "Global instructions template";      Default = $true;  Id = "claude-md" }
+            @{ Label = "settings.json";   Desc = "Smart-merged Claude Code settings"; Default = $true;  Id = "settings" }
+            @{ Label = "Common rules";    Desc = "Coding style, git, security, testing"; Default = $true; Id = "rules-common" }
+            @{ Label = "StatusLine";      Desc = "Gradient progress bar & usage display"; Default = $true; Id = "hooks" }
+            @{ Label = "Lessons";         Desc = "lessons.md template + SessionStart hook"; Default = $true; Id = "lessons" }
+        )}
+        @{ Label = "Language Rules"; Hint = "only install what your projects need"; Items = @(
+            @{ Label = "Python rules";    Desc = "PEP 8, pytest, type hints, bandit"; Default = $false; Id = "rules-python" }
+            @{ Label = "TypeScript rules"; Desc = "Zod, Playwright, immutability";    Default = $false; Id = "rules-ts" }
+            @{ Label = "Go rules";        Desc = "gofmt, table-driven tests, gosec";  Default = $false; Id = "rules-go" }
+        )}
+        @{ Label = "Review"; Hint = "adversarial-review and Codex are mutually exclusive"; Items = @(
+            @{ Label = "code-review plugin"; Desc = "PR code review (claude-plugins-official)"; Default = $true; Id = "review-code-review" }
+            @{ Label = "adversarial-review"; Desc = "Cross-model adversarial review (poteto/noodle)"; Default = $true; Id = "review-adversarial" }
+            @{ Label = "Codex adversarial-review"; Desc = "Codex plugin adversarial review (openai/codex)"; Default = $false; Id = "review-codex" }
+        )}
+        @{ Label = "Skills"; Hint = ""; Items = @(
+            @{ Label = "paper-reading";   Desc = "Research paper summarization";      Default = $true;  Id = "skill-paper-reading" }
+            @{ Label = "humanizer";       Desc = "Remove AI writing patterns (English, blader)"; Default = $true; Id = "skill-humanizer" }
+            @{ Label = "humanizer-zh";    Desc = "Remove AI writing patterns (Chinese, op7418)"; Default = $false; Id = "skill-humanizer-zh" }
+            @{ Label = "update-config";   Desc = "Configure Claude Code via settings.json"; Default = $true; Id = "skill-update-config" }
+        )}
+        @{ Label = "Plugins - Official"; Hint = ""; Items = @(
+            @{ Label = "everything-claude-code"; Desc = "TDD, security, database, Go/Python/Spring Boot"; Default = $true; Id = "plug-everything-claude-code" }
+            @{ Label = "superpowers";     Desc = "Planning, brainstorming, TDD, debugging"; Default = $true; Id = "plug-superpowers" }
+            @{ Label = "context7";        Desc = "Real-time library documentation";   Default = $true;  Id = "plug-context7" }
+            @{ Label = "commit-commands"; Desc = "git commit / push / PR workflow";   Default = $true;  Id = "plug-commit-commands" }
+            @{ Label = "document-skills"; Desc = "Document processing (PDF, DOCX, PPTX, XLSX)"; Default = $true; Id = "plug-document-skills" }
+            @{ Label = "playwright";      Desc = "Browser automation & E2E testing";  Default = $true;  Id = "plug-playwright" }
+            @{ Label = "feature-dev";     Desc = "Guided feature development";        Default = $true;  Id = "plug-feature-dev" }
+            @{ Label = "code-simplifier"; Desc = "Code simplification & cleanup";     Default = $true;  Id = "plug-code-simplifier" }
+            @{ Label = "ralph-loop";      Desc = "Automated iteration loop";          Default = $true;  Id = "plug-ralph-loop" }
+            @{ Label = "frontend-design"; Desc = "Frontend UI design";                Default = $true;  Id = "plug-frontend-design" }
+            @{ Label = "example-skills";  Desc = "Example skills collection";         Default = $true;  Id = "plug-example-skills" }
+            @{ Label = "github";          Desc = "GitHub integration";                Default = $true;  Id = "plug-github" }
+        )}
+        @{ Label = "Plugins - Community"; Hint = ""; Items = @(
+            @{ Label = "claude-mem";      Desc = "Cross-session memory (~3k tokens/session)"; Default = $false; Id = "plug-claude-mem" }
+            @{ Label = "claude-health";   Desc = "Health check & wellness dashboard"; Default = $false; Id = "plug-claude-health" }
+            @{ Label = "PUA";             Desc = "AI agent productivity booster (pua, pua-en, pua-ja)"; Default = $false; Id = "plug-pua" }
+        )}
+        @{ Label = "Plugins - AI Research"; Hint = ""; Items = @(
+            @{ Label = "tokenization";    Desc = "Tokenizer training & usage";        Default = $false; Id = "plug-tokenization" }
+            @{ Label = "fine-tuning";     Desc = "Model fine-tuning";                 Default = $false; Id = "plug-fine-tuning" }
+            @{ Label = "post-training";   Desc = "Post-training (RLHF, DPO, GRPO)";  Default = $false; Id = "plug-post-training" }
+            @{ Label = "inference-serving"; Desc = "Inference serving (vLLM, SGLang, TensorRT)"; Default = $false; Id = "plug-inference-serving" }
+            @{ Label = "distributed-training"; Desc = "Distributed training (DeepSpeed, FSDP, Megatron)"; Default = $false; Id = "plug-distributed-training" }
+            @{ Label = "optimization";    Desc = "Quantization & optimization (GPTQ, AWQ, Flash Attn)"; Default = $false; Id = "plug-optimization" }
+        )}
+        @{ Label = "MCP Servers"; Hint = ""; Items = @(
+            @{ Label = "Lark MCP server"; Desc = "Feishu/Lark integration";           Default = $false; Id = "mcp" }
+        )}
     )
 
     $groups = @(
@@ -236,22 +272,48 @@ function Show-InteractiveMenu {
         @{ Start = 14; End = 14; Label = "MCP Servers" }
     )
 
-    $n = $items.Count
-    $selected = @()
-    for ($i = 0; $i -lt $n; $i++) {
-        $selected += $items[$i].Default
+    # Flatten groups into parallel arrays
+    $allItems = @()
+    $groupStart = @()
+    $groupEnd = @()
+    foreach ($g in $groups) {
+        $groupStart += $allItems.Count
+        $allItems += $g.Items
+        $groupEnd += ($allItems.Count - 1)
     }
+    $n = $allItems.Count
+    $numGroups = $groups.Count
+
+    # Initialize selections from defaults
+    $selected = @()
+    for ($i = 0; $i -lt $n; $i++) { $selected += $allItems[$i].Default }
 
     $cursor = 0
-    $submitIndex = $n  # Submit button is at index $n
+    $submitIndex = $numGroups
 
-    # Save cursor visibility
+    # Helper: enforce review mutual exclusion
+    function Enforce-ReviewMutex($idx) {
+        if ($selected[$idx]) {
+            $id = $allItems[$idx].Id
+            $reviewStart = $groupStart[2]; $reviewEnd = $groupEnd[2]
+            if ($id -eq "review-adversarial") {
+                for ($j = $reviewStart; $j -le $reviewEnd; $j++) {
+                    if ($allItems[$j].Id -eq "review-codex") { $selected[$j] = $false }
+                }
+            } elseif ($id -eq "review-codex") {
+                for ($j = $reviewStart; $j -le $reviewEnd; $j++) {
+                    if ($allItems[$j].Id -eq "review-adversarial") { $selected[$j] = $false }
+                }
+            }
+        }
+    }
+
     $savedCursorVisible = [Console]::CursorVisible
     [Console]::CursorVisible = $false
 
     try {
+        # --- Main menu loop ---
         while ($true) {
-            # Draw menu
             [Console]::Clear()
             Write-Host ""
             Write-Host "  =========================================" -ForegroundColor White
@@ -259,46 +321,35 @@ function Show-InteractiveMenu {
             Write-Host "  $(Get-SourceVersion)" -ForegroundColor White
             Write-Host "  =========================================" -ForegroundColor White
             Write-Host ""
-            Write-Host "  " -NoNewline; Write-Host "Up/Down move  Enter select  a=all n=none d=defaults q=quit" -ForegroundColor DarkGray
+            Write-Host "  " -NoNewline; Write-Host "Up/Down move  Enter open  a=all n=none d=defaults q=quit" -ForegroundColor DarkGray
             Write-Host ""
 
-            foreach ($group in $groups) {
-                Write-Host "  $($group.Label)" -ForegroundColor Cyan
-
-                for ($j = $group.Start; $j -le $group.End; $j++) {
-                    $item = $items[$j]
-                    $isCursor = ($j -eq $cursor)
-
-                    # Indicator
-                    if ($isCursor) {
-                        Write-Host "  " -NoNewline
-                        Write-Host "> " -ForegroundColor Green -NoNewline
-                    } else {
-                        Write-Host "    " -NoNewline
-                    }
-
-                    # Checkbox
-                    Write-Host "[" -NoNewline
-                    if ($selected[$j]) {
-                        Write-Host "x" -ForegroundColor Green -NoNewline
-                    } else {
-                        Write-Host " " -NoNewline
-                    }
-                    Write-Host "] " -NoNewline
-
-                    # Label + description
-                    $label = $item.Label.PadRight(24)
-                    if ($isCursor) {
-                        Write-Host $label -ForegroundColor White -NoNewline
-                    } else {
-                        Write-Host $label -NoNewline
-                    }
-                    Write-Host " $($item.Desc)" -ForegroundColor DarkGray
+            for ($g = 0; $g -lt $numGroups; $g++) {
+                $cnt = 0
+                for ($j = $groupStart[$g]; $j -le $groupEnd[$g]; $j++) {
+                    if ($selected[$j]) { $cnt++ }
                 }
-                Write-Host ""
-            }
+                $tot = $groupEnd[$g] - $groupStart[$g] + 1
+                $countStr = "[$cnt/$tot]".PadRight(7)
+                $label = $groups[$g].Label.PadRight(24)
+                $isCursor = ($g -eq $cursor)
 
-            # Submit button
+                if ($isCursor) {
+                    Write-Host "  " -NoNewline
+                    Write-Host "> " -ForegroundColor Green -NoNewline
+                    Write-Host "$countStr " -NoNewline
+                    Write-Host $label -ForegroundColor White -NoNewline
+                } else {
+                    Write-Host "    $countStr $label" -NoNewline
+                }
+                if ($groups[$g].Hint) {
+                    Write-Host " ($($groups[$g].Hint))" -ForegroundColor DarkGray
+                } else {
+                    Write-Host ""
+                }
+            }
+            Write-Host ""
+
             if ($cursor -eq $submitIndex) {
                 Write-Host "  " -NoNewline
                 Write-Host "> " -ForegroundColor Green -NoNewline
@@ -309,101 +360,173 @@ function Show-InteractiveMenu {
             }
             Write-Host ""
 
-            # Read key
             $key = [Console]::ReadKey($true)
 
+            # Check submit first
+            if ($cursor -eq $submitIndex -and ($key.Key -eq [ConsoleKey]::Enter -or $key.Key -eq [ConsoleKey]::Spacebar)) { break }
+
             switch ($key.Key) {
-                ([ConsoleKey]::UpArrow) {
-                    if ($cursor -gt 0) { $cursor-- }
-                }
-                ([ConsoleKey]::DownArrow) {
-                    if ($cursor -lt $submitIndex) { $cursor++ }
-                }
+                ([ConsoleKey]::UpArrow)   { if ($cursor -gt 0) { $cursor-- } }
+                ([ConsoleKey]::DownArrow) { if ($cursor -lt $submitIndex) { $cursor++ } }
                 ([ConsoleKey]::Enter) {
-                    if ($cursor -eq $submitIndex) {
-                        break  # Submit
-                    } else {
-                        $selected[$cursor] = -not $selected[$cursor]
-                    }
-                }
-                ([ConsoleKey]::Spacebar) {
-                    if ($cursor -eq $submitIndex) {
-                        break  # Submit
-                    } else {
-                        $selected[$cursor] = -not $selected[$cursor]
+                    if ($cursor -lt $numGroups) {
+                        # Enter sub-menu
+                        $subG = $cursor
+                        $subItems = $groups[$subG].Items
+                        $subN = $subItems.Count
+                        $subCursor = 0
+                        $inSub = $true
+                        while ($inSub) {
+                            [Console]::Clear()
+                            Write-Host ""
+                            Write-Host "  =========================================" -ForegroundColor White
+                            Write-Host "  $($groups[$subG].Label)" -ForegroundColor Cyan -NoNewline
+                            if ($groups[$subG].Hint) { Write-Host "  ($($groups[$subG].Hint))" -ForegroundColor DarkGray } else { Write-Host "" }
+                            Write-Host "  =========================================" -ForegroundColor White
+                            Write-Host ""
+                            Write-Host "  " -NoNewline; Write-Host "Up/Down move  Space toggle  Enter/Esc back" -ForegroundColor DarkGray
+                            Write-Host ""
+
+                            for ($j = 0; $j -lt $subN; $j++) {
+                                $absIdx = $groupStart[$subG] + $j
+                                $isCur = ($j -eq $subCursor)
+                                if ($isCur) { Write-Host "  " -NoNewline; Write-Host "> " -ForegroundColor Green -NoNewline } else { Write-Host "    " -NoNewline }
+                                Write-Host "[" -NoNewline
+                                if ($selected[$absIdx]) { Write-Host "x" -ForegroundColor Green -NoNewline } else { Write-Host " " -NoNewline }
+                                Write-Host "] " -NoNewline
+                                $lbl = $allItems[$absIdx].Label.PadRight(28)
+                                if ($isCur) { Write-Host $lbl -ForegroundColor White -NoNewline } else { Write-Host $lbl -NoNewline }
+                                Write-Host " $($allItems[$absIdx].Desc)" -ForegroundColor DarkGray
+                            }
+                            Write-Host ""
+                            if ($subCursor -eq $subN) {
+                                Write-Host "  " -NoNewline; Write-Host "> " -ForegroundColor Green -NoNewline; Write-Host "[ Back ]" -ForegroundColor Yellow
+                            } else {
+                                Write-Host "     " -NoNewline; Write-Host "[ Back ]" -ForegroundColor DarkGray
+                            }
+                            Write-Host ""
+
+                            $subKey = [Console]::ReadKey($true)
+                            switch ($subKey.Key) {
+                                ([ConsoleKey]::UpArrow)   { if ($subCursor -gt 0) { $subCursor-- } }
+                                ([ConsoleKey]::DownArrow) { if ($subCursor -lt $subN) { $subCursor++ } }
+                                ([ConsoleKey]::Spacebar) {
+                                    if ($subCursor -lt $subN) {
+                                        $absIdx = $groupStart[$subG] + $subCursor
+                                        $selected[$absIdx] = -not $selected[$absIdx]
+                                        Enforce-ReviewMutex $absIdx
+                                    }
+                                }
+                                ([ConsoleKey]::Enter) {
+                                    if ($subCursor -eq $subN) { $inSub = $false }
+                                    else {
+                                        $absIdx = $groupStart[$subG] + $subCursor
+                                        $selected[$absIdx] = -not $selected[$absIdx]
+                                        Enforce-ReviewMutex $absIdx
+                                    }
+                                }
+                                ([ConsoleKey]::Escape) { $inSub = $false }
+                                default {
+                                    switch ($subKey.KeyChar) {
+                                        'a' { for ($j = $groupStart[$subG]; $j -le $groupEnd[$subG]; $j++) { $selected[$j] = $true }; if ($subG -eq 2) { for ($j = $groupStart[2]; $j -le $groupEnd[2]; $j++) { if ($allItems[$j].Id -eq "review-codex") { $selected[$j] = $false } } } }
+                                        'n' { for ($j = $groupStart[$subG]; $j -le $groupEnd[$subG]; $j++) { $selected[$j] = $false } }
+                                        'd' { for ($j = $groupStart[$subG]; $j -le $groupEnd[$subG]; $j++) { $selected[$j] = $allItems[$j].Default } }
+                                        'q' { $inSub = $false }
+                                        'j' { if ($subCursor -lt $subN) { $subCursor++ } }
+                                        'k' { if ($subCursor -gt 0) { $subCursor-- } }
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
                 default {
                     switch ($key.KeyChar) {
-                        'a' { for ($i = 0; $i -lt $n; $i++) { $selected[$i] = $true } }
-                        'A' { for ($i = 0; $i -lt $n; $i++) { $selected[$i] = $true } }
+                        'a' { for ($i = 0; $i -lt $n; $i++) { $selected[$i] = $true }; for ($j = $groupStart[2]; $j -le $groupEnd[2]; $j++) { if ($allItems[$j].Id -eq "review-codex") { $selected[$j] = $false } } }
                         'n' { for ($i = 0; $i -lt $n; $i++) { $selected[$i] = $false } }
-                        'N' { for ($i = 0; $i -lt $n; $i++) { $selected[$i] = $false } }
-                        'd' { for ($i = 0; $i -lt $n; $i++) { $selected[$i] = $items[$i].Default } }
-                        'D' { for ($i = 0; $i -lt $n; $i++) { $selected[$i] = $items[$i].Default } }
-                        'q' {
-                            [Console]::CursorVisible = $savedCursorVisible
-                            Write-Host ""
-                            Write-Info "Cancelled."
-                            exit 0
-                        }
-                        'Q' {
-                            [Console]::CursorVisible = $savedCursorVisible
-                            Write-Host ""
-                            Write-Info "Cancelled."
-                            exit 0
-                        }
+                        'd' { for ($i = 0; $i -lt $n; $i++) { $selected[$i] = $allItems[$i].Default } }
+                        'q' { [Console]::CursorVisible = $savedCursorVisible; Write-Host ""; Write-Info "Cancelled."; exit 0 }
                         'j' { if ($cursor -lt $submitIndex) { $cursor++ } }
-                        'J' { if ($cursor -lt $submitIndex) { $cursor++ } }
                         'k' { if ($cursor -gt 0) { $cursor-- } }
-                        'K' { if ($cursor -gt 0) { $cursor-- } }
                     }
                 }
-            }
-
-            # Check if we should break (Enter/Space on Submit)
-            if ($cursor -eq $submitIndex -and ($key.Key -eq [ConsoleKey]::Enter -or $key.Key -eq [ConsoleKey]::Spacebar)) {
-                break
             }
         }
     } finally {
         [Console]::CursorVisible = $savedCursorVisible
     }
 
+    # Plugin ID -> package mapping
+    $pluginMap = @{
+        "plug-everything-claude-code" = "everything-claude-code@everything-claude-code"
+        "plug-superpowers" = "superpowers@claude-plugins-official"
+        "plug-context7" = "context7@claude-plugins-official"
+        "plug-commit-commands" = "commit-commands@claude-plugins-official"
+        "plug-document-skills" = "document-skills@anthropic-agent-skills"
+        "plug-playwright" = "playwright@claude-plugins-official"
+        "plug-feature-dev" = "feature-dev@claude-plugins-official"
+        "plug-code-simplifier" = "code-simplifier@claude-plugins-official"
+        "plug-ralph-loop" = "ralph-loop@claude-plugins-official"
+        "plug-frontend-design" = "frontend-design@claude-plugins-official"
+        "plug-example-skills" = "example-skills@anthropic-agent-skills"
+        "plug-github" = "github@claude-plugins-official"
+        "plug-claude-mem" = "claude-mem@thedotmack"
+        "plug-claude-health" = "health@claude-health"
+        "plug-pua" = "pua@pua-skills"
+        "plug-tokenization" = "tokenization@ai-research-skills"
+        "plug-fine-tuning" = "fine-tuning@ai-research-skills"
+        "plug-post-training" = "post-training@ai-research-skills"
+        "plug-inference-serving" = "inference-serving@ai-research-skills"
+        "plug-distributed-training" = "distributed-training@ai-research-skills"
+        "plug-optimization" = "optimization@ai-research-skills"
+        "review-code-review" = "code-review@claude-plugins-official"
+    }
+
     # Map selections to return value
     $result = @{
-        ClaudeMd       = $false
-        Settings       = $false
-        Rules          = $false
-        RuleLangs      = @()
-        RuleLangsExplicit = $true
-        Hooks          = $false
-        Lessons        = $false
-        Skills         = $false
-        Plugins        = $false
-        PluginGroups   = @()
-        Mcp            = $false
+        ClaudeMd           = $false
+        Settings           = $false
+        Rules              = $false
+        RuleLangs          = @()
+        RuleLangsExplicit  = $true
+        Hooks              = $false
+        Lessons            = $false
+        Skills             = $false
+        SelectedSkills     = @()
+        Plugins            = $false
+        SelectedPlugins    = @()
+        PluginGroups       = @()
+        Mcp                = $false
+        ReviewAdversarial  = $false
+        ReviewCodex        = $false
+        ReviewCodeReview   = $false
     }
 
     for ($i = 0; $i -lt $n; $i++) {
         if (-not $selected[$i]) { continue }
+        $id = $allItems[$i].Id
 
-        switch ($items[$i].Id) {
-            "claude-md"        { $result.ClaudeMd = $true }
-            "settings"         { $result.Settings = $true }
-            "rules-common"     { $result.Rules = $true }
-            "hooks"            { $result.Hooks = $true }
-            "lessons"          { $result.Lessons = $true }
-            "skills"           { $result.Skills = $true }
-            "rules-python"     { $result.Rules = $true; $result.RuleLangs += "python" }
-            "rules-ts"         { $result.Rules = $true; $result.RuleLangs += "typescript" }
-            "rules-go"         { $result.Rules = $true; $result.RuleLangs += "golang" }
-            "plugins-essential"   { $result.Plugins = $true; $result.PluginGroups += "essential" }
-            "plugins-claude-mem"  { $result.Plugins = $true; $result.PluginGroups += "claude-mem" }
-            "plugins-ai-research" { $result.Plugins = $true; $result.PluginGroups += "ai-research" }
-            "plugins-health"      { $result.Plugins = $true; $result.PluginGroups += "health" }
-            "plugins-pua"         { $result.Plugins = $true; $result.PluginGroups += "pua" }
-            "mcp"              { $result.Mcp = $true }
+        switch -Wildcard ($id) {
+            "claude-md"          { $result.ClaudeMd = $true }
+            "settings"           { $result.Settings = $true }
+            "rules-common"       { $result.Rules = $true }
+            "hooks"              { $result.Hooks = $true }
+            "lessons"            { $result.Lessons = $true }
+            "rules-python"       { $result.Rules = $true; $result.RuleLangs += "python" }
+            "rules-ts"           { $result.Rules = $true; $result.RuleLangs += "typescript" }
+            "rules-go"           { $result.Rules = $true; $result.RuleLangs += "golang" }
+            "review-code-review" { $result.ReviewCodeReview = $true; $result.Plugins = $true; $result.SelectedPlugins += "code-review@claude-plugins-official" }
+            "review-adversarial" { $result.ReviewAdversarial = $true; $result.Skills = $true; $result.SelectedSkills += "adversarial-review" }
+            "review-codex"       { $result.ReviewCodex = $true; $result.Plugins = $true; $result.SelectedPlugins += "codex@openai-codex" }
+            "skill-paper-reading"  { $result.Skills = $true; $result.SelectedSkills += "paper-reading" }
+            "skill-humanizer"      { $result.Skills = $true; $result.SelectedSkills += "humanizer" }
+            "skill-humanizer-zh"   { $result.Skills = $true; $result.SelectedSkills += "humanizer-zh" }
+            "skill-update-config"  { $result.Skills = $true; $result.SelectedSkills += "update-config" }
+            "mcp"                { $result.Mcp = $true }
+            "plug-*"             {
+                $result.Plugins = $true
+                if ($pluginMap.ContainsKey($id)) { $result.SelectedPlugins += $pluginMap[$id] }
+            }
         }
     }
 
@@ -413,11 +536,26 @@ function Show-InteractiveMenu {
 # --- Install functions -----------------------------------------------------
 
 function Install-ClaudeMd {
+    param([bool]$ReviewAdversarial = $false, [bool]$ReviewCodex = $false)
     Write-Info "Installing CLAUDE.md..."
     if ($DryRun) {
         Write-Info "Would copy: CLAUDE.md -> $CLAUDE_DIR\CLAUDE.md"
+        Write-Info "  Code Review: adversarial=$ReviewAdversarial codex=$ReviewCodex"
     } else {
-        Copy-Item (Join-Path $SCRIPT_DIR "CLAUDE.md") (Join-Path $CLAUDE_DIR "CLAUDE.md") -Force
+        $target = Join-Path $CLAUDE_DIR "CLAUDE.md"
+        Copy-Item (Join-Path $SCRIPT_DIR "CLAUDE.md") $target -Force
+
+        # Dynamic Code Review section
+        if ($ReviewAdversarial) {
+            $reviewLine = 'Whenever a code review is needed — whether explicitly requested by the user or triggered by a skill (e.g., `code-reviewer`, `simplify`) — always invoke the `adversarial-review` skill to perform it. If the adversarial-review skill is unavailable (e.g., `codex` CLI not installed), fall back to using the `code-reviewer` agent for the review. Never substitute the actual review call with a text-only description.'
+        } elseif ($ReviewCodex) {
+            $reviewLine = 'Whenever a code review is needed — whether explicitly requested by the user or triggered by a skill (e.g., `code-reviewer`, `simplify`) — first check if the Codex plugin is available by running `/codex:setup`. If Codex is ready (`ready: true`), invoke `/codex:adversarial-review` to perform the review. If Codex is unavailable or not authenticated, fall back to using the `code-reviewer` agent for the review. Never substitute the actual review call with a text-only description.'
+        } else {
+            $reviewLine = 'Whenever a code review is needed — whether explicitly requested by the user or triggered by a skill (e.g., `code-reviewer`, `simplify`) — use the `code-reviewer` agent to perform it. Never substitute the actual review call with a text-only description.'
+        }
+        $content = Get-Content $target -Raw
+        $content = $content -replace '(?m)^Whenever a code review is needed.*$', $reviewLine
+        Set-Content $target $content -NoNewline
         Write-Ok "CLAUDE.md installed"
     }
 }
@@ -602,12 +740,13 @@ function Install-Rules {
 }
 
 function Install-Skills {
+    param([string[]]$SelectedSkills = @())
     Write-Info "Installing custom skills..."
     $skillsDir = Join-Path $CLAUDE_DIR "skills"
     New-Item -ItemType Directory -Path $skillsDir -Force | Out-Null
 
     # Migration: remove renamed/deleted skills from previous installs
-    foreach ($oldSkill in @("update", "adversarial-review")) {
+    foreach ($oldSkill in @("update")) {
         $oldPath = Join-Path $skillsDir $oldSkill
         if (Test-Path $oldPath) {
             Remove-Item $oldPath -Recurse -Force
@@ -615,15 +754,35 @@ function Install-Skills {
         }
     }
 
-    Get-ChildItem (Join-Path $SCRIPT_DIR "skills") -Directory | ForEach-Object {
-        $skill = $_.Name
-        $dst = Join-Path $skillsDir $skill
-        if ($DryRun) {
-            Write-Info "Would copy: skills\$skill\ -> $dst"
-        } else {
-            if (Test-Path $dst) { Remove-Item $dst -Recurse -Force }
-            Copy-Item $_.FullName $dst -Recurse -Force
-            Write-Ok "Skill installed: $skill"
+    if ($SelectedSkills.Count -gt 0) {
+        # Install only selected skills
+        foreach ($skill in $SelectedSkills) {
+            $src = Join-Path $SCRIPT_DIR "skills" $skill
+            $dst = Join-Path $skillsDir $skill
+            if (Test-Path $src) {
+                if ($DryRun) {
+                    Write-Info "Would copy: skills\$skill\ -> $dst"
+                } else {
+                    if (Test-Path $dst) { Remove-Item $dst -Recurse -Force }
+                    Copy-Item $src $dst -Recurse -Force
+                    Write-Ok "Skill installed: $skill"
+                }
+            } else {
+                Write-Warn "Skill not found: $skill"
+            }
+        }
+    } else {
+        # --All mode: install everything
+        Get-ChildItem (Join-Path $SCRIPT_DIR "skills") -Directory | ForEach-Object {
+            $skill = $_.Name
+            $dst = Join-Path $skillsDir $skill
+            if ($DryRun) {
+                Write-Info "Would copy: skills\$skill\ -> $dst"
+            } else {
+                if (Test-Path $dst) { Remove-Item $dst -Recurse -Force }
+                Copy-Item $_.FullName $dst -Recurse -Force
+                Write-Ok "Skill installed: $skill"
+            }
         }
     }
 }
@@ -776,7 +935,8 @@ function Install-Mcp {
 
 function Install-Plugins {
     param(
-        [string[]]$Groups = @("essential")
+        [string[]]$Groups = @("essential"),
+        [string[]]$SelectedPluginsList = @()
     )
 
     $claudeCmd = Get-Command claude -ErrorAction SilentlyContinue
@@ -785,8 +945,9 @@ function Install-Plugins {
         return
     }
 
-    # Collect plugins from all selected groups
+    # Collect plugins from individually selected + group-based
     $plugins = @()
+    if ($SelectedPluginsList.Count -gt 0) { $plugins += $SelectedPluginsList }
     foreach ($group in $Groups) {
         switch ($group) {
             "essential" { $plugins += $PLUGINS_ESSENTIAL }
@@ -1004,6 +1165,10 @@ function Main {
     $ruleLangs = @()
     $ruleLangsExplicit = $false
     $pluginGroups = @()
+    $selectedSkills = @()
+    $selectedPlugins = @()
+    $reviewAdversarial = $false
+    $reviewCodex = $false
 
     if ($All) {
         # Explicit -All: install everything including MCP
@@ -1016,6 +1181,10 @@ function Main {
         $doPlugins = $true
         $doMcp = $true
         $pluginGroups = @("all")
+        $reviewAdversarial = $true
+        $reviewCodex = $false
+        $selectedPlugins = @("code-review@claude-plugins-official")
+        $selectedSkills = @()
     } elseif ([Environment]::UserInteractive -and $Host.Name -eq "ConsoleHost") {
         # Interactive mode: show menu (with fallback if console APIs fail)
         $menuResult = $null
@@ -1037,6 +1206,10 @@ function Main {
             $ruleLangs = $menuResult.RuleLangs
             $ruleLangsExplicit = $menuResult.RuleLangsExplicit
             $pluginGroups = $menuResult.PluginGroups
+            $selectedSkills = $menuResult.SelectedSkills
+            $selectedPlugins = $menuResult.SelectedPlugins
+            $reviewAdversarial = $menuResult.ReviewAdversarial
+            $reviewCodex = $menuResult.ReviewCodex
         } else {
             # Fallback when interactive menu failed
             $doClaudeMd = $true
@@ -1090,14 +1263,14 @@ function Main {
         New-Item -ItemType Directory -Path $CLAUDE_DIR -Force | Out-Null
     }
 
-    if ($doClaudeMd) { Install-ClaudeMd }
+    if ($doClaudeMd) { Install-ClaudeMd -ReviewAdversarial $reviewAdversarial -ReviewCodex $reviewCodex }
     if ($doSettings) { Install-Settings }
     if ($doRules) { Install-Rules -Langs $ruleLangs -LangsExplicit $ruleLangsExplicit }
-    if ($doSkills) { Install-Skills }
+    if ($doSkills) { Install-Skills -SelectedSkills $selectedSkills }
     if ($doLessons) { Install-Lessons }
     if ($doHooks) { Install-Hooks }
     if ($doMcp) { Install-Mcp }
-    if ($doPlugins) { Install-Plugins -Groups $pluginGroups }
+    if ($doPlugins) { Install-Plugins -Groups $pluginGroups -SelectedPluginsList $selectedPlugins }
 
     if (-not $DryRun) {
         if ($InstallWarnings -eq 0) {

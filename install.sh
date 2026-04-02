@@ -159,7 +159,7 @@ detect_script_dir() {
     else
         # Remote mode: download tarball to temp dir
         REMOTE_MODE=true
-        local tmpdir
+        # Not local — trap needs access after function returns (set -u)
         tmpdir="$(mktemp -d)"
         trap 'rm -rf "$tmpdir"' EXIT
 
@@ -309,13 +309,16 @@ INTERACTIVE=false
 RULE_LANGS=()
 RULE_LANGS_EXPLICIT=false
 PLUGIN_GROUPS=()
+REVIEW_ADVERSARIAL=false
+REVIEW_CODEX=false
+SELECTED_SKILLS=()
+SELECTED_PLUGINS=()
 
 # --- Plugin groups ------------------------------------------------------
 
 PLUGINS_ESSENTIAL=(
     "everything-claude-code@everything-claude-code"
     "superpowers@claude-plugins-official"
-    "code-review@claude-plugins-official"
     "context7@claude-plugins-official"
     "commit-commands@claude-plugins-official"
     "document-skills@anthropic-agent-skills"
@@ -326,7 +329,6 @@ PLUGINS_ESSENTIAL=(
     "frontend-design@claude-plugins-official"
     "example-skills@anthropic-agent-skills"
     "github@claude-plugins-official"
-    "codex@openai-codex"
 )
 
 PLUGINS_CLAUDE_MEM=(
@@ -436,44 +438,115 @@ interactive_menu() {
         return
     fi
 
+    # --- Two-level menu data structure ---
+    # Each group has: label, hint, and an array of items.
     # Item format: "label|description|default_on|id"
-    local items=(
-        "CLAUDE.md|Global instructions template|1|claude-md"
-        "settings.json|Smart-merged Claude Code settings|1|settings"
-        "Common rules|Coding style, git, security, testing|1|rules-common"
-        "StatusLine|Gradient progress bar & usage display|1|statusline"
-        "Lessons|lessons.md template + SessionStart hook|1|lessons"
-        "Custom skills|paper-reading, humanizer|1|skills"
-        "Python rules|PEP 8, pytest, type hints, bandit|0|rules-python"
-        "TypeScript rules|Zod, Playwright, immutability|0|rules-ts"
-        "Go rules|gofmt, table-driven tests, gosec|0|rules-go"
-        "Plugins (14)|superpowers, code-review, codex, playwright, feature-dev...|1|plugins-essential"
-        "claude-mem|Cross-session memory (~3k tokens/session)|0|plugins-claude-mem"
-        "AI Research plugins|fine-tuning, inference, optimization...|0|plugins-ai-research"
-        "claude-health|Health check & wellness dashboard|0|plugins-health"
-        "PUA|AI agent productivity booster (pua, pua-en, pua-ja)|0|plugins-pua"
-        "Lark MCP server|Feishu/Lark integration|0|mcp"
-    )
+    # Groups are navigated in the main menu; Enter opens sub-menu.
+    # Mutual exclusion: review-adversarial and review-codex (handled in toggle logic).
 
-    local n=${#items[@]}
+    local -a GROUP_LABELS=()
+    local -a GROUP_HINTS=()
+    local -a GROUP_ITEMS=()    # pipe-separated list of items per group
+
+    # Group 0: Core
+    GROUP_LABELS+=("Core")
+    GROUP_HINTS+=("")
+    GROUP_ITEMS+=("CLAUDE.md|Global instructions template|1|claude-md
+settings.json|Smart-merged Claude Code settings|1|settings
+Common rules|Coding style, git, security, testing|1|rules-common
+StatusLine|Gradient progress bar & usage display|1|statusline
+Lessons|lessons.md template + SessionStart hook|1|lessons")
+
+    # Group 1: Language Rules
+    GROUP_LABELS+=("Language Rules")
+    GROUP_HINTS+=("only install what your projects need")
+    GROUP_ITEMS+=("Python rules|PEP 8, pytest, type hints, bandit|0|rules-python
+TypeScript rules|Zod, Playwright, immutability|0|rules-ts
+Go rules|gofmt, table-driven tests, gosec|0|rules-go")
+
+    # Group 2: Review
+    GROUP_LABELS+=("Review")
+    GROUP_HINTS+=("adversarial-review and Codex are mutually exclusive")
+    GROUP_ITEMS+=("code-review plugin|PR code review (claude-plugins-official)|1|review-code-review
+adversarial-review|Cross-model adversarial review (poteto/noodle)|1|review-adversarial
+Codex adversarial-review|Codex plugin adversarial review (openai/codex)|0|review-codex")
+
+    # Group 3: Skills
+    GROUP_LABELS+=("Skills")
+    GROUP_HINTS+=("")
+    GROUP_ITEMS+=("paper-reading|Research paper summarization|1|skill-paper-reading
+humanizer|Remove AI writing patterns (English, blader)|1|skill-humanizer
+humanizer-zh|Remove AI writing patterns (Chinese, op7418)|0|skill-humanizer-zh
+update-config|Configure Claude Code via settings.json|1|skill-update-config")
+
+    # Group 4: Plugins — Official
+    GROUP_LABELS+=("Plugins — Official")
+    GROUP_HINTS+=("")
+    GROUP_ITEMS+=("everything-claude-code|TDD, security, database, Go/Python/Spring Boot|1|plug-everything-claude-code
+superpowers|Planning, brainstorming, TDD, debugging|1|plug-superpowers
+context7|Real-time library documentation|1|plug-context7
+commit-commands|git commit / push / PR workflow|1|plug-commit-commands
+document-skills|Document processing (PDF, DOCX, PPTX, XLSX)|1|plug-document-skills
+playwright|Browser automation & E2E testing|1|plug-playwright
+feature-dev|Guided feature development|1|plug-feature-dev
+code-simplifier|Code simplification & cleanup|1|plug-code-simplifier
+ralph-loop|Automated iteration loop|1|plug-ralph-loop
+frontend-design|Frontend UI design|1|plug-frontend-design
+example-skills|Example skills collection|1|plug-example-skills
+github|GitHub integration|1|plug-github")
+
+    # Group 5: Plugins — Community
+    GROUP_LABELS+=("Plugins — Community")
+    GROUP_HINTS+=("")
+    GROUP_ITEMS+=("claude-mem|Cross-session memory (~3k tokens/session)|0|plug-claude-mem
+claude-health|Health check & wellness dashboard|0|plug-claude-health
+PUA|AI agent productivity booster (pua, pua-en, pua-ja)|0|plug-pua")
+
+    # Group 6: Plugins — AI Research
+    GROUP_LABELS+=("Plugins — AI Research")
+    GROUP_HINTS+=("")
+    GROUP_ITEMS+=("tokenization|Tokenizer training & usage|0|plug-tokenization
+fine-tuning|Model fine-tuning|0|plug-fine-tuning
+post-training|Post-training (RLHF, DPO, GRPO)|0|plug-post-training
+inference-serving|Inference serving (vLLM, SGLang, TensorRT)|0|plug-inference-serving
+distributed-training|Distributed training (DeepSpeed, FSDP, Megatron)|0|plug-distributed-training
+optimization|Quantization & optimization (GPTQ, AWQ, Flash Attn)|0|plug-optimization")
+
+    # Group 7: MCP Servers
+    GROUP_LABELS+=("MCP Servers")
+    GROUP_HINTS+=("")
+    GROUP_ITEMS+=("Lark MCP server|Feishu/Lark integration|0|mcp")
+
+    local num_groups=${#GROUP_LABELS[@]}
+
+    # Flatten all items into parallel arrays for indexing
+    local -a ALL_LABELS=() ALL_DESCS=() ALL_DEFAULTS=() ALL_IDS=()
+    local -a GROUP_START=() GROUP_END=()
+    local flat_idx=0
+    for (( g=0; g<num_groups; g++ )); do
+        GROUP_START[$g]=$flat_idx
+        while IFS= read -r line; do
+            [[ -z "$line" ]] && continue
+            local _l _d _df _id
+            IFS='|' read -r _l _d _df _id <<< "$line"
+            ALL_LABELS+=("$_l")
+            ALL_DESCS+=("$_d")
+            ALL_DEFAULTS+=("$_df")
+            ALL_IDS+=("$_id")
+            (( flat_idx++ ))
+        done <<< "${GROUP_ITEMS[$g]}"
+        GROUP_END[$g]=$(( flat_idx - 1 ))
+    done
+
+    local n=$flat_idx
     local selected=()
     local cursor=0
 
     # Initialize selections from defaults
     local i
     for (( i=0; i<n; i++ )); do
-        local _f1 _f2 _def _f4
-        IFS='|' read -r _f1 _f2 _def _f4 <<< "${items[$i]}"
-        selected[$i]="$_def"
+        selected[$i]="${ALL_DEFAULTS[$i]}"
     done
-
-    # Group definitions: start|end|label|hint
-    local groups=(
-        "0|5|Core|"
-        "6|8|Language Rules|only install what your projects need"
-        "9|13|Plugins|"
-        "14|14|MCP Servers|"
-    )
 
     # Save terminal state (operate on fd 3 which points to the actual tty)
     local saved_stty
@@ -497,6 +570,7 @@ interactive_menu() {
             case "$rest" in
                 '[A') echo "UP" ;;
                 '[B') echo "DOWN" ;;
+                '')   echo "ESC" ;;
                 *)    echo "OTHER" ;;
             esac
             return
@@ -515,62 +589,132 @@ interactive_menu() {
         esac
     }
 
-    _draw_menu() {
+    # --- Helper: count selected items in a group ---
+    _group_count() {
+        local g=$1 cnt=0
+        for (( j=GROUP_START[g]; j<=GROUP_END[g]; j++ )); do
+            (( selected[j] )) && (( cnt++ ))
+        done
+        echo $cnt
+    }
+    _group_total() {
+        local g=$1
+        echo $(( GROUP_END[g] - GROUP_START[g] + 1 ))
+    }
+
+    # --- Helper: enforce mutual exclusion for review items ---
+    _enforce_review_mutex() {
+        local toggled_idx=$1
+        local toggled_id="${ALL_IDS[$toggled_idx]}"
+        # Only enforce if we just turned ON one of the mutually exclusive pair
+        if [[ ${selected[$toggled_idx]} -eq 1 ]]; then
+            if [[ "$toggled_id" == "review-adversarial" ]]; then
+                # Find and turn off review-codex
+                for (( j=GROUP_START[2]; j<=GROUP_END[2]; j++ )); do
+                    [[ "${ALL_IDS[$j]}" == "review-codex" ]] && selected[$j]=0
+                done
+            elif [[ "$toggled_id" == "review-codex" ]]; then
+                # Find and turn off review-adversarial
+                for (( j=GROUP_START[2]; j<=GROUP_END[2]; j++ )); do
+                    [[ "${ALL_IDS[$j]}" == "review-adversarial" ]] && selected[$j]=0
+                done
+            fi
+        fi
+    }
+
+    # --- Draw main menu (groups as rows with counts) ---
+    _draw_main_menu() {
         local buf=""
-        # Move cursor home (no clear - overwrite in place to prevent flicker)
         buf+='\033[H'
-        # Header
         buf+='\033[K\n'
         buf+='  \033[1;37m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m\033[K\n'
         buf+="    \033[1;36mAwesome Claude Code Config Installer\033[0m  \033[2m${_cached_version}\033[0m\033[K\n"
         buf+='  \033[1;37m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m\033[K\n'
         buf+='\033[K\n'
-        buf+='  \033[2m↑/↓ Navigate   Space Toggle   Enter Submit\033[0m\033[K\n'
-        buf+='  \033[2ma All   n None   d Defaults   q Quit\033[0m\033[K\n'
+        buf+='  \033[2m↑/↓ Navigate   Enter Open   a All  n None  d Defaults  q Quit\033[0m\033[K\n'
         buf+='\033[K\n'
 
-        for group_def in "${groups[@]}"; do
-            local g_start g_end g_label g_hint
-            IFS='|' read -r g_start g_end g_label g_hint <<< "$group_def"
+        local g
+        for (( g=0; g<num_groups; g++ )); do
+            local cnt tot label hint padded count_str
+            cnt=$(_group_count $g)
+            tot=$(_group_total $g)
+            label="${GROUP_LABELS[$g]}"
+            hint="${GROUP_HINTS[$g]}"
+            printf -v padded '%-24s' "$label"
+            count_str="[${cnt}/${tot}]"
+            printf -v count_str '%-7s' "$count_str"
 
-            if [[ -n "$g_hint" ]]; then
-                buf+="  \033[1;36m${g_label}\033[0m  \033[2m(${g_hint})\033[0m\033[K\n"
+            if [[ $g -eq $cursor ]]; then
+                buf+="  \033[32m>\033[0m ${count_str} \033[1m${padded}\033[0m"
             else
-                buf+="  \033[1;36m${g_label}\033[0m\033[K\n"
+                buf+="    ${count_str} ${padded}"
             fi
-
-            local j
-            for (( j=g_start; j<=g_end; j++ )); do
-                local label desc _def _id
-                IFS='|' read -r label desc _def _id <<< "${items[$j]}"
-
-                local padded
-                printf -v padded '%-24s' "$label"
-
-                local mark=" "
-                if [[ ${selected[$j]} -eq 1 ]]; then
-                    mark='\033[32m*\033[0m'
-                fi
-
-                if [[ $j -eq $cursor ]]; then
-                    buf+="  \033[32m>\033[0m [${mark}] \033[1m${padded}\033[0m \033[2m${desc}\033[0m\033[K\n"
-                else
-                    buf+="    [${mark}] ${padded} \033[2m${desc}\033[0m\033[K\n"
-                fi
-            done
+            if [[ -n "$hint" ]]; then
+                buf+=" \033[2m(${hint})\033[0m"
+            fi
             buf+='\033[K\n'
         done
+        buf+='\033[K\n'
 
         # Submit button
-        if [[ $cursor -eq $n ]]; then
+        if [[ $cursor -eq $num_groups ]]; then
             buf+='  \033[32m>\033[0m  \033[1;32m[ Submit ]\033[0m\033[K\n'
         else
             buf+='     \033[2m[ Submit ]\033[0m\033[K\n'
         fi
+        buf+='\033[K\n\033[J'
+        printf '%b' "$buf"
+    }
+
+    # --- Draw sub-menu (items within a group) ---
+    _draw_sub_menu() {
+        local g=$1 sub_cursor=$2
+        local g_start=${GROUP_START[$g]} g_end=${GROUP_END[$g]}
+        local sub_n=$(( g_end - g_start + 1 ))
+
+        local buf=""
+        buf+='\033[H'
         buf+='\033[K\n'
-        # Clear any remaining lines from previous render
-        buf+='\033[J'
-        # Single atomic write eliminates flicker
+        buf+='  \033[1;37m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m\033[K\n'
+        buf+="    \033[1;36m${GROUP_LABELS[$g]}\033[0m"
+        if [[ -n "${GROUP_HINTS[$g]}" ]]; then
+            buf+="  \033[2m(${GROUP_HINTS[$g]})\033[0m"
+        fi
+        buf+='\033[K\n'
+        buf+='  \033[1;37m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m\033[K\n'
+        buf+='\033[K\n'
+        buf+='  \033[2m↑/↓ Navigate   Space Toggle   Enter/Esc Back\033[0m\033[K\n'
+        buf+='  \033[2ma All   n None   d Defaults\033[0m\033[K\n'
+        buf+='\033[K\n'
+
+        local j rel=0
+        for (( j=g_start; j<=g_end; j++, rel++ )); do
+            local label="${ALL_LABELS[$j]}"
+            local desc="${ALL_DESCS[$j]}"
+            local padded
+            printf -v padded '%-28s' "$label"
+
+            local mark=" "
+            if [[ ${selected[$j]} -eq 1 ]]; then
+                mark='\033[32m*\033[0m'
+            fi
+
+            if [[ $rel -eq $sub_cursor ]]; then
+                buf+="  \033[32m>\033[0m [${mark}] \033[1m${padded}\033[0m \033[2m${desc}\033[0m\033[K\n"
+            else
+                buf+="    [${mark}] ${padded} \033[2m${desc}\033[0m\033[K\n"
+            fi
+        done
+        buf+='\033[K\n'
+
+        # Back button
+        if [[ $sub_cursor -eq $sub_n ]]; then
+            buf+='  \033[32m>\033[0m  \033[1;33m[ Back ]\033[0m\033[K\n'
+        else
+            buf+='     \033[2m[ Back ]\033[0m\033[K\n'
+        fi
+        buf+='\033[K\n\033[J'
         printf '%b' "$buf"
     }
 
@@ -578,16 +722,15 @@ interactive_menu() {
     local _cached_version
     _cached_version="$(get_source_version)"
 
-    # Title is plain bold white, borders are green
-
     # Enter alternate screen, hide cursor, disable echo
     printf '\033[?1049h' 2>/dev/null
     tput civis 2>/dev/null || printf '\033[?25l'
     stty -echo <&3 2>/dev/null || true
 
-    # Main loop
+    # Main menu loop
+    cursor=0
     while true; do
-        _draw_menu
+        _draw_main_menu
 
         local key
         key="$(_read_key)"
@@ -597,27 +740,88 @@ interactive_menu() {
                 (( cursor > 0 )) && (( cursor-- )) || true
                 ;;
             DOWN)
-                (( cursor < n )) && (( cursor++ )) || true
+                (( cursor < num_groups )) && (( cursor++ )) || true
                 ;;
-            ENTER|SPACE)
-                if (( cursor == n )); then
+            ENTER)
+                if (( cursor == num_groups )); then
                     # Submit
                     break
-                else
-                    selected[$cursor]=$(( 1 - ${selected[$cursor]} ))
                 fi
+                # Enter sub-menu for this group
+                local sub_g=$cursor
+                local sub_n=$(( GROUP_END[sub_g] - GROUP_START[sub_g] + 1 ))
+                local sub_cursor=0
+                local in_sub=true
+                while $in_sub; do
+                    _draw_sub_menu $sub_g $sub_cursor
+                    key="$(_read_key)"
+                    case "$key" in
+                        UP)
+                            (( sub_cursor > 0 )) && (( sub_cursor-- )) || true
+                            ;;
+                        DOWN)
+                            (( sub_cursor < sub_n )) && (( sub_cursor++ )) || true
+                            ;;
+                        SPACE)
+                            if (( sub_cursor < sub_n )); then
+                                local abs_idx=$(( GROUP_START[sub_g] + sub_cursor ))
+                                selected[$abs_idx]=$(( 1 - ${selected[$abs_idx]} ))
+                                _enforce_review_mutex $abs_idx
+                            fi
+                            ;;
+                        ENTER)
+                            # Back button or toggle
+                            if (( sub_cursor == sub_n )); then
+                                in_sub=false
+                            else
+                                local abs_idx=$(( GROUP_START[sub_g] + sub_cursor ))
+                                selected[$abs_idx]=$(( 1 - ${selected[$abs_idx]} ))
+                                _enforce_review_mutex $abs_idx
+                            fi
+                            ;;
+                        ALL)
+                            for (( j=GROUP_START[sub_g]; j<=GROUP_END[sub_g]; j++ )); do
+                                selected[$j]=1
+                            done
+                            # Re-enforce mutex only when in the Review group
+                            if (( sub_g == 2 )); then
+                                for (( j=GROUP_START[2]; j<=GROUP_END[2]; j++ )); do
+                                    [[ "${ALL_IDS[$j]}" == "review-codex" ]] && selected[$j]=0
+                                done
+                            fi
+                            ;;
+                        NONE)
+                            for (( j=GROUP_START[sub_g]; j<=GROUP_END[sub_g]; j++ )); do
+                                selected[$j]=0
+                            done
+                            ;;
+                        DEFAULT)
+                            for (( j=GROUP_START[sub_g]; j<=GROUP_END[sub_g]; j++ )); do
+                                selected[$j]="${ALL_DEFAULTS[$j]}"
+                            done
+                            ;;
+                        QUIT|ESC)
+                            in_sub=false
+                            ;;
+                    esac
+                done
+                ;;
+            SPACE)
+                # On main menu, Space does nothing (Enter to open sub-menu)
                 ;;
             ALL)
                 for (( i=0; i<n; i++ )); do selected[$i]=1; done
+                # Enforce review mutex: adversarial ON (default), codex OFF
+                for (( j=${GROUP_START[2]}; j<=${GROUP_END[2]}; j++ )); do
+                    [[ "${ALL_IDS[$j]}" == "review-codex" ]] && selected[$j]=0
+                done
                 ;;
             NONE)
                 for (( i=0; i<n; i++ )); do selected[$i]=0; done
                 ;;
             DEFAULT)
                 for (( i=0; i<n; i++ )); do
-                    local _f1 _f2 _def _f4
-                    IFS='|' read -r _f1 _f2 _def _f4 <<< "${items[$i]}"
-                    selected[$i]="$_def"
+                    selected[$i]="${ALL_DEFAULTS[$i]}"
                 done
                 ;;
             QUIT)
@@ -637,28 +841,68 @@ interactive_menu() {
     INSTALL_ALL=false
     RULE_LANGS_EXPLICIT=true
 
+    # Helper: map plug-* ID to package name (bash 3.2 compatible, no associative arrays)
+    _plug_id_to_pkg() {
+        case "$1" in
+            plug-everything-claude-code) echo "everything-claude-code@everything-claude-code" ;;
+            plug-superpowers)       echo "superpowers@claude-plugins-official" ;;
+            plug-context7)          echo "context7@claude-plugins-official" ;;
+            plug-commit-commands)   echo "commit-commands@claude-plugins-official" ;;
+            plug-document-skills)   echo "document-skills@anthropic-agent-skills" ;;
+            plug-playwright)        echo "playwright@claude-plugins-official" ;;
+            plug-feature-dev)       echo "feature-dev@claude-plugins-official" ;;
+            plug-code-simplifier)   echo "code-simplifier@claude-plugins-official" ;;
+            plug-ralph-loop)        echo "ralph-loop@claude-plugins-official" ;;
+            plug-frontend-design)   echo "frontend-design@claude-plugins-official" ;;
+            plug-example-skills)    echo "example-skills@anthropic-agent-skills" ;;
+            plug-github)            echo "github@claude-plugins-official" ;;
+            plug-claude-mem)        echo "claude-mem@thedotmack" ;;
+            plug-claude-health)     echo "health@claude-health" ;;
+            plug-pua)               echo "pua@pua-skills" ;;
+            plug-tokenization)      echo "tokenization@ai-research-skills" ;;
+            plug-fine-tuning)       echo "fine-tuning@ai-research-skills" ;;
+            plug-post-training)     echo "post-training@ai-research-skills" ;;
+            plug-inference-serving) echo "inference-serving@ai-research-skills" ;;
+            plug-distributed-training) echo "distributed-training@ai-research-skills" ;;
+            plug-optimization)      echo "optimization@ai-research-skills" ;;
+            *) echo "" ;;
+        esac
+    }
+
     for (( i=0; i<n; i++ )); do
         [[ ${selected[$i]} -eq 0 ]] && continue
 
-        local item_id _f1 _f2 _f3
-        IFS='|' read -r _f1 _f2 _f3 item_id <<< "${items[$i]}"
+        local item_id="${ALL_IDS[$i]}"
 
         case "$item_id" in
-            claude-md)           INSTALL_CLAUDE_MD=true ;;
-            settings)            INSTALL_SETTINGS=true ;;
-            rules-common)        INSTALL_RULES=true ;;
-            statusline)          INSTALL_STATUSLINE=true ;;
-            lessons)             INSTALL_LESSONS=true ;;
-            skills)              INSTALL_SKILLS=true ;;
-            rules-python)        INSTALL_RULES=true; RULE_LANGS+=("python") ;;
-            rules-ts)            INSTALL_RULES=true; RULE_LANGS+=("typescript") ;;
-            rules-go)            INSTALL_RULES=true; RULE_LANGS+=("golang") ;;
-            plugins-essential)   INSTALL_PLUGINS=true; PLUGIN_GROUPS+=("essential") ;;
-            plugins-claude-mem)  INSTALL_PLUGINS=true; PLUGIN_GROUPS+=("claude-mem") ;;
-            plugins-ai-research) INSTALL_PLUGINS=true; PLUGIN_GROUPS+=("ai-research") ;;
-            plugins-health)      INSTALL_PLUGINS=true; PLUGIN_GROUPS+=("health") ;;
-            plugins-pua)         INSTALL_PLUGINS=true; PLUGIN_GROUPS+=("pua") ;;
-            mcp)                 INSTALL_MCP=true ;;
+            # Core
+            claude-md)              INSTALL_CLAUDE_MD=true ;;
+            settings)               INSTALL_SETTINGS=true ;;
+            rules-common)           INSTALL_RULES=true ;;
+            statusline)             INSTALL_STATUSLINE=true ;;
+            lessons)                INSTALL_LESSONS=true ;;
+            # Language rules
+            rules-python)           INSTALL_RULES=true; RULE_LANGS+=("python") ;;
+            rules-ts)               INSTALL_RULES=true; RULE_LANGS+=("typescript") ;;
+            rules-go)               INSTALL_RULES=true; RULE_LANGS+=("golang") ;;
+            # Review
+            review-code-review)     INSTALL_PLUGINS=true; SELECTED_PLUGINS+=("code-review@claude-plugins-official") ;;
+            review-adversarial)     REVIEW_ADVERSARIAL=true; INSTALL_SKILLS=true; SELECTED_SKILLS+=("adversarial-review") ;;
+            review-codex)           REVIEW_CODEX=true; INSTALL_PLUGINS=true; SELECTED_PLUGINS+=("codex@openai-codex") ;;
+            # Skills
+            skill-paper-reading)    INSTALL_SKILLS=true; SELECTED_SKILLS+=("paper-reading") ;;
+            skill-humanizer)        INSTALL_SKILLS=true; SELECTED_SKILLS+=("humanizer") ;;
+            skill-humanizer-zh)     INSTALL_SKILLS=true; SELECTED_SKILLS+=("humanizer-zh") ;;
+            skill-update-config)    INSTALL_SKILLS=true; SELECTED_SKILLS+=("update-config") ;;
+            # MCP
+            mcp)                    INSTALL_MCP=true ;;
+            # Plugins (all plug-* ids)
+            plug-*)
+                INSTALL_PLUGINS=true
+                local pkg
+                pkg="$(_plug_id_to_pkg "$item_id")"
+                [[ -n "$pkg" ]] && SELECTED_PLUGINS+=("$pkg")
+                ;;
         esac
     done
 
@@ -697,8 +941,27 @@ install_claude_md() {
     info "Installing CLAUDE.md..."
     if $DRY_RUN; then
         info "Would copy: CLAUDE.md -> $CLAUDE_DIR/CLAUDE.md"
+        info "  Code Review: adversarial=$REVIEW_ADVERSARIAL codex=$REVIEW_CODEX"
     else
         cp "$SCRIPT_DIR/CLAUDE.md" "$CLAUDE_DIR/CLAUDE.md"
+
+        # Dynamic Code Review section based on review tool selection
+        local review_line
+        if $REVIEW_ADVERSARIAL; then
+            review_line='Whenever a code review is needed — whether explicitly requested by the user or triggered by a skill (e.g., `code-reviewer`, `simplify`) — always invoke the `adversarial-review` skill to perform it. If the adversarial-review skill is unavailable (e.g., `codex` CLI not installed), fall back to using the `code-reviewer` agent for the review. Never substitute the actual review call with a text-only description.'
+        elif $REVIEW_CODEX; then
+            review_line='Whenever a code review is needed — whether explicitly requested by the user or triggered by a skill (e.g., `code-reviewer`, `simplify`) — first check if the Codex plugin is available by running `/codex:setup`. If Codex is ready (`ready: true`), invoke `/codex:adversarial-review` to perform the review. If Codex is unavailable or not authenticated, fall back to using the `code-reviewer` agent for the review. Never substitute the actual review call with a text-only description.'
+        else
+            review_line='Whenever a code review is needed — whether explicitly requested by the user or triggered by a skill (e.g., `code-reviewer`, `simplify`) — use the `code-reviewer` agent to perform it. Never substitute the actual review call with a text-only description.'
+        fi
+
+        # Replace the Code Review line in CLAUDE.md (the line after "## Code Review\n")
+        if command -v sed &>/dev/null; then
+            # Use a temp file to avoid sed -i portability issues
+            local tmp="$CLAUDE_DIR/CLAUDE.md.tmp"
+            sed '/^Whenever a code review is needed/c\'"$review_line" "$CLAUDE_DIR/CLAUDE.md" > "$tmp" && mv "$tmp" "$CLAUDE_DIR/CLAUDE.md"
+        fi
+
         ok "CLAUDE.md installed"
     fi
 }
@@ -936,26 +1199,45 @@ install_skills() {
     mkdir -p "$CLAUDE_DIR/skills"
 
     # Migration: remove renamed/deleted skills from previous installs
-    for old_skill in "update" "adversarial-review"; do
+    for old_skill in "update"; do
         if [[ -d "$CLAUDE_DIR/skills/$old_skill" ]]; then
             rm -rf "$CLAUDE_DIR/skills/$old_skill"
             ok "Removed legacy skill: $old_skill"
         fi
     done
 
-    for skill_dir in "$SCRIPT_DIR"/skills/*/; do
-        [[ -d "$skill_dir" ]] || continue
-        local skill
-        skill=$(basename "$skill_dir")
+    # If specific skills were selected (interactive mode), install only those
+    if [[ ${#SELECTED_SKILLS[@]} -gt 0 ]]; then
+        for skill in "${SELECTED_SKILLS[@]}"; do
+            local skill_dir="$SCRIPT_DIR/skills/$skill"
+            if [[ -d "$skill_dir" ]]; then
+                if $DRY_RUN; then
+                    info "Would copy: skills/$skill/ -> $CLAUDE_DIR/skills/$skill/"
+                else
+                    rm -rf "$CLAUDE_DIR/skills/$skill"
+                    cp -r "$skill_dir" "$CLAUDE_DIR/skills/$skill"
+                    ok "Skill installed: $skill"
+                fi
+            else
+                warn "Skill not found: $skill"
+            fi
+        done
+    else
+        # --all mode: install everything
+        for skill_dir in "$SCRIPT_DIR"/skills/*/; do
+            [[ -d "$skill_dir" ]] || continue
+            local skill
+            skill=$(basename "$skill_dir")
 
-        if $DRY_RUN; then
-            info "Would copy: skills/$skill/ -> $CLAUDE_DIR/skills/$skill/"
-        else
-            rm -rf "$CLAUDE_DIR/skills/$skill"
-            cp -r "$skill_dir" "$CLAUDE_DIR/skills/$skill"
-            ok "Skill installed: $skill"
-        fi
-    done
+            if $DRY_RUN; then
+                info "Would copy: skills/$skill/ -> $CLAUDE_DIR/skills/$skill/"
+            else
+                rm -rf "$CLAUDE_DIR/skills/$skill"
+                cp -r "$skill_dir" "$CLAUDE_DIR/skills/$skill"
+                ok "Skill installed: $skill"
+            fi
+        done
+    fi
 }
 
 install_lessons() {
@@ -1024,30 +1306,37 @@ install_plugins() {
         return 1
     fi
 
-    # Collect plugins from all selected groups
+    # Collect plugins from both SELECTED_PLUGINS and group-based collection
     local plugins=()
-    for group in "${PLUGIN_GROUPS[@]}"; do
-        case "$group" in
-            essential|core)
-                plugins+=("${PLUGINS_ESSENTIAL[@]}")
-                ;;
-            claude-mem)
-                plugins+=("${PLUGINS_CLAUDE_MEM[@]}")
-                ;;
-            ai-research)
-                plugins+=("${PLUGINS_AI_RESEARCH[@]}")
-                ;;
-            health)
-                plugins+=("${PLUGINS_HEALTH[@]}")
-                ;;
-            pua)
-                plugins+=("${PLUGINS_PUA[@]}")
-                ;;
-            all)
-                plugins+=("${PLUGINS_ESSENTIAL[@]}" "${PLUGINS_CLAUDE_MEM[@]}" "${PLUGINS_AI_RESEARCH[@]}" "${PLUGINS_HEALTH[@]}" "${PLUGINS_PUA[@]}")
-                ;;
-        esac
-    done
+    # Add individually selected plugins (interactive mode / review selections)
+    if [[ ${#SELECTED_PLUGINS[@]} -gt 0 ]]; then
+        plugins+=("${SELECTED_PLUGINS[@]}")
+    fi
+    # Add group-based plugins (--all mode)
+    if [[ ${#PLUGIN_GROUPS[@]} -gt 0 ]]; then
+        for group in "${PLUGIN_GROUPS[@]}"; do
+            case "$group" in
+                essential|core)
+                    plugins+=("${PLUGINS_ESSENTIAL[@]}")
+                    ;;
+                claude-mem)
+                    plugins+=("${PLUGINS_CLAUDE_MEM[@]}")
+                    ;;
+                ai-research)
+                    plugins+=("${PLUGINS_AI_RESEARCH[@]}")
+                    ;;
+                health)
+                    plugins+=("${PLUGINS_HEALTH[@]}")
+                    ;;
+                pua)
+                    plugins+=("${PLUGINS_PUA[@]}")
+                    ;;
+                all)
+                    plugins+=("${PLUGINS_ESSENTIAL[@]}" "${PLUGINS_CLAUDE_MEM[@]}" "${PLUGINS_AI_RESEARCH[@]}" "${PLUGINS_HEALTH[@]}" "${PLUGINS_PUA[@]}")
+                    ;;
+            esac
+        done
+    fi
 
     # Deduplicate
     local unique_plugins=()
@@ -1059,10 +1348,6 @@ install_plugins() {
         fi
     done
     plugins=("${unique_plugins[@]}")
-
-    local group_names
-    group_names="$(IFS=','; echo "${PLUGIN_GROUPS[*]}")"
-    info "Installing plugins (groups: $group_names)..."
 
     # Collect required marketplaces from selected plugins
     local marketplace_list=(
@@ -1259,10 +1544,14 @@ main() {
         INSTALL_LESSONS=true
         INSTALL_STATUSLINE=true
         INSTALL_PLUGINS=true
+        # Review defaults for --all: adversarial ON, codex OFF
+        REVIEW_ADVERSARIAL=true
         if $EXPLICIT_ALL; then
             # Explicit --all: install everything including MCP and all plugin groups
             INSTALL_MCP=true
             PLUGIN_GROUPS=("all")
+            # Add code-review plugin (normally from Review group)
+            SELECTED_PLUGINS+=("code-review@claude-plugins-official")
         else
             # Implicit (non-TTY fallback): essential plugins only, no MCP
             PLUGIN_GROUPS=("essential")

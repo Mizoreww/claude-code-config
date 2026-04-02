@@ -1,5 +1,27 @@
 # Changelog
 
+## [2.2.0] - 2026-04-02
+
+### Features
+- **Two-level interactive menu**: Installer now uses a main menu with group summaries (`[selected/total]`) and sub-menus for individual item selection. Groups: Core, Language Rules, Review, Skills, Plugins — Official, Plugins — Community, Plugins — AI Research, MCP Servers.
+- **Review tool selector**: New "Review" menu group with three options — `code-review` plugin (default ON), `adversarial-review` skill (default ON), and Codex adversarial-review (default OFF). The adversarial-review skill and Codex review are mutually exclusive.
+- **Restored adversarial-review skill**: Brought back the [adversarial-review](https://github.com/poteto/noodle) skill that spawns cross-model reviewers (Claude spawns Codex, Codex spawns Claude) with distinct critical lenses (Skeptic, Architect, Minimalist).
+- **New humanizer-zh skill**: Added Chinese humanizer skill from [op7418/Humanizer-zh](https://github.com/op7418/Humanizer-zh) for removing AI writing patterns from Chinese text.
+- **Per-plugin granularity**: All 23 plugins can now be individually selected/deselected in the interactive menu (previously bundled into groups).
+- **Dynamic CLAUDE.md Code Review section**: The installer now rewrites the Code Review rule in CLAUDE.md based on the selected review tool (adversarial-review, Codex, or plain code-reviewer agent).
+
+### Design Rationale
+- Two-level menu keeps the main view compact while allowing fine-grained control — no scrolling through 40+ items
+- Mutual exclusion prevents conflicting review tools from being installed simultaneously
+- Restoring adversarial-review as default gives users the cross-model review experience without requiring Codex authentication
+- Per-plugin granularity lets users skip plugins they don't need, reducing context window consumption
+
+### Notes & Caveats
+- The `--all` flag installs everything with adversarial-review (not Codex) as the default review tool
+- Codex adversarial-review selection automatically installs the `codex@openai-codex` plugin
+- adversarial-review skill requires `codex` CLI installed for cross-model review
+- Legacy `skills/update` cleanup is preserved; `skills/adversarial-review` is no longer treated as legacy
+
 ## [2.1.0] - 2026-04-02
 
 ### Features

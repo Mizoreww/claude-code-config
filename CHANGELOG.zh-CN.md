@@ -1,5 +1,27 @@
 # 更新日志
 
+## [2.2.0] - 2026-04-02
+
+### 新特性
+- **二级交互式菜单**：安装器改为主菜单显示分组摘要（`[已选/总数]`），Enter 进入子菜单单独选择。分组：Core、Language Rules、Review、Skills、Plugins — Official、Plugins — Community、Plugins — AI Research、MCP Servers。
+- **Review 工具选择器**：新增 "Review" 菜单分组，三个选项——`code-review` 插件（默认开启）、`adversarial-review` skill（默认开启）、Codex adversarial-review（默认关闭）。adversarial-review 和 Codex review 互斥。
+- **恢复 adversarial-review skill**：恢复 [adversarial-review](https://github.com/poteto/noodle) skill，在对立模型上生成审查者（Claude 派 Codex，Codex 派 Claude），使用不同批判视角（怀疑者、架构师、极简主义者）。
+- **新增 humanizer-zh skill**：添加来自 [op7418/Humanizer-zh](https://github.com/op7418/Humanizer-zh) 的中文去 AI 痕迹 skill。
+- **单插件粒度选择**：23 个插件现在都可以在交互式菜单中单独选择/取消（之前按组捆绑）。
+- **CLAUDE.md Code Review 段动态生成**：安装器根据选择的审查工具动态修改 CLAUDE.md 中的 Code Review 规则。
+
+### 设计考量
+- 二级菜单保持主界面紧凑，同时允许细粒度控制——无需滚动 40+ 项
+- 互斥机制防止冲突的审查工具同时安装
+- 恢复 adversarial-review 作为默认，无需 Codex 认证即可使用跨模型审查
+- 单插件粒度让用户跳过不需要的插件，减少 context window 消耗
+
+### 注意事项
+- `--all` 标志安装全部内容，默认使用 adversarial-review（非 Codex）
+- 选择 Codex adversarial-review 会自动安装 `codex@openai-codex` 插件
+- adversarial-review skill 需要安装 `codex` CLI 以实现跨模型审查
+- 旧 `skills/update` 清理保留；`skills/adversarial-review` 不再作为旧版处理
+
 ## [2.1.0] - 2026-04-02
 
 ### 新特性
