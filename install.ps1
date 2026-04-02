@@ -265,13 +265,6 @@ function Show-InteractiveMenu {
         )}
     )
 
-    $groups = @(
-        @{ Start = 0;  End = 5;  Label = "Core" }
-        @{ Start = 6;  End = 8;  Label = "Language Rules  (only install what your projects need)" }
-        @{ Start = 9;  End = 13; Label = "Plugins" }
-        @{ Start = 14; End = 14; Label = "MCP Servers" }
-    )
-
     # Flatten groups into parallel arrays
     $allItems = @()
     $groupStart = @()

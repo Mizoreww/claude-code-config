@@ -552,13 +552,23 @@ optimization|Quantization & optimization (GPTQ, AWQ, Flash Attn)|0|plug-optimiza
     local saved_stty
     saved_stty=$(stty -g <&3 2>/dev/null) || saved_stty=""
 
+    local _menu_active=false
     _menu_cleanup() {
+        $_menu_active || return 0
+        _menu_active=false
         printf '\033[?1049l' 2>/dev/null
         [[ -n "$saved_stty" ]] && stty "$saved_stty" <&3 2>/dev/null || stty echo <&3 2>/dev/null || true
         tput cnorm 2>/dev/null || printf '\033[?25h'
         exec 3<&- 2>/dev/null || true
     }
     trap '_menu_cleanup; exit 0' INT TERM
+    # Also clean up on unexpected exit (e.g. set -e) to restore terminal.
+    # Chain with tmpdir cleanup for remote mode.
+    if $REMOTE_MODE; then
+        trap '_menu_cleanup; rm -rf "${tmpdir:-}"' EXIT
+    else
+        trap '_menu_cleanup' EXIT
+    fi
 
     _read_key() {
         local key
@@ -723,6 +733,7 @@ optimization|Quantization & optimization (GPTQ, AWQ, Flash Attn)|0|plug-optimiza
     _cached_version="$(get_source_version)"
 
     # Enter alternate screen, hide cursor, disable echo
+    _menu_active=true
     printf '\033[?1049h' 2>/dev/null
     tput civis 2>/dev/null || printf '\033[?25l'
     stty -echo <&3 2>/dev/null || true
@@ -835,7 +846,9 @@ optimization|Quantization & optimization (GPTQ, AWQ, Flash Attn)|0|plug-optimiza
 
     # Restore terminal (fd 3 closed by _menu_cleanup)
     _menu_cleanup
-    trap - INT TERM
+    trap - INT TERM EXIT
+    # Restore tmpdir cleanup for remote mode
+    $REMOTE_MODE && [[ -n "${tmpdir:-}" ]] && trap 'rm -rf "$tmpdir"' EXIT || true
 
     # Map selections to install flags
     INSTALL_ALL=false
