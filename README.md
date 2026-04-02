@@ -6,7 +6,7 @@
 
 ![Statusline](assets/statusline.png)
 
-Production-ready configuration for [Claude Code](https://claude.com/claude-code) — one-command install of global instructions, multi-language coding rules (Python / TypeScript / Go), 22 curated plugins, custom skills (paper-reading, [adversarial-review](https://github.com/poteto/noodle/tree/main/.agents/skills/adversarial-review), [humanizer](https://github.com/blader/humanizer), update_config), custom status bar, MCP integration, and a self-improvement loop that remembers corrections across sessions.
+Production-ready configuration for [Claude Code](https://claude.com/claude-code) — one-command install of global instructions, multi-language coding rules (Python / TypeScript / Go), 22 curated plugins, custom skills (paper-reading, [humanizer](https://github.com/blader/humanizer), update-config), [Codex adversarial-review](https://github.com/openai/codex-plugin-cc) plugin, custom status bar, MCP integration, and a self-improvement loop that remembers corrections across sessions.
 
 ## Showcase
 
@@ -27,7 +27,7 @@ Production-ready configuration for [Claude Code](https://claude.com/claude-code)
 ├── hooks/                 # Statusline with gradient progress bars (context + 5h usage)
 ├── mcp/                   # MCP server config (Lark-MCP)
 ├── plugins/               # Plugin installation guide (22 plugins, 7 marketplaces)
-├── skills/                # Custom skills (paper-reading, adversarial-review, humanizer, update_config)
+├── skills/                # Custom skills (paper-reading, humanizer, update-config)
 ├── docs/                  # Research paper summaries
 ├── images/                # Showcase screenshots
 ├── VERSION                # Semantic version number
@@ -286,17 +286,16 @@ CLAUDE.md includes a **Version Changelog** rule: when making version-level chang
 | Skill | Description |
 |-------|-------------|
 | **paper-reading** | Structured research paper summarization with automatic figure extraction. Pure PDF pipeline using pymupdf4llm for precise image/vector/table extraction (no ar5iv/Playwright dependency), outputs standardized markdown (problem, method, experiments, insights). |
-| **[adversarial-review](https://github.com/poteto/noodle/tree/main/.agents/skills/adversarial-review)** | Cross-model adversarial code review. Spawns reviewers on the opposite AI model (Claude ↔ Codex) with distinct critical lenses (Skeptic, Architect, Minimalist), then synthesizes a structured verdict (PASS/CONTESTED/REJECT). |
 | **[humanizer](https://github.com/blader/humanizer)** | Detect and remove AI writing patterns from text. Based on Wikipedia's "Signs of AI writing" guide, identifies 24 patterns across content, language, style, and communication categories (significance inflation, AI vocabulary, em dash overuse, sycophantic tone, etc.) and rewrites text to sound natural. |
-| **update_config** | In-session update command. Type `/update_config` in Claude Code to check for new versions and re-run the interactive installer — no need to leave the session. |
+| **update-config** | In-session update command. Type `/update-config` in Claude Code to check for new versions and re-run the interactive installer — no need to leave the session. |
 
 Place custom skills in `skills/<name>/SKILL.md`.
 
-### Adversarial Code Review via Codex CLI
+### Adversarial Code Review via Codex Plugin
 
-CLAUDE.md includes a **Code Review** rule: whenever a code review is needed — whether requested by the user or triggered by a skill (e.g., `code-reviewer`, `simplify`) — Claude invokes the `adversarial-review` skill (from [poteto/noodle](https://github.com/poteto/noodle/tree/main/.agents/skills/adversarial-review)). This skill spawns reviewers on the **opposite AI model's CLI** (`codex exec` for Claude users, `claude -p` for Codex users), producing cross-model adversarial analysis with structured verdicts (PASS / CONTESTED / REJECT).
+CLAUDE.md includes a **Code Review** rule: whenever a code review is needed — whether requested by the user or triggered by a skill (e.g., `code-reviewer`, `simplify`) — Claude invokes the [Codex plugin](https://github.com/openai/codex-plugin-cc)'s `/codex:adversarial-review` command. This plugin spawns Codex reviewers with distinct critical lenses, producing cross-model adversarial analysis with structured verdicts.
 
-Requires Codex CLI installed and `OPENAI_API_KEY` set in your environment.
+Requires the Codex plugin installed (included by default) and `OPENAI_API_KEY` set in your environment.
 
 ## Security Note
 

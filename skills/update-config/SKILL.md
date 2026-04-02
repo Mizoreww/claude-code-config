@@ -1,6 +1,6 @@
 ---
-name: update_config
-description: Update awesome-claude-code-config to the latest version. Checks remote for new releases, then re-runs the installer with the interactive selector. Use when user types /update_config or asks to update their Claude Code configuration.
+name: update-config
+description: Update awesome-claude-code-config to the latest version. Checks remote for new releases, then re-runs the installer with the interactive selector. Use when user types /update-config or asks to update their Claude Code configuration.
 ---
 
 # Update — awesome-claude-code-config

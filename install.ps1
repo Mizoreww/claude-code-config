@@ -172,6 +172,7 @@ $PLUGINS_ESSENTIAL = @(
     "frontend-design@claude-plugins-official"
     "example-skills@anthropic-agent-skills"
     "github@claude-plugins-official"
+    "codex@openai-codex"
 )
 
 $PLUGINS_CLAUDE_MEM = @(
@@ -203,6 +204,7 @@ $MARKETPLACE_LIST = @(
     @{ Name = "thedotmack"; Repo = "thedotmack/claude-mem" }
     @{ Name = "claude-health"; Repo = "tw93/claude-health" }
     @{ Name = "pua-skills"; Repo = "tanweai/pua" }
+    @{ Name = "openai-codex"; Repo = "openai/codex-plugin-cc" }
 )
 
 # --- Interactive menu ------------------------------------------------------
@@ -215,11 +217,11 @@ function Show-InteractiveMenu {
         @{ Label = "Common rules";         Desc = "Coding style, git, security, testing";           Default = $true;  Id = "rules-common" }
         @{ Label = "Hooks";                Desc = "StatusLine display hook";                        Default = $true;  Id = "hooks" }
         @{ Label = "Lessons template";     Desc = "Cross-session learning framework";               Default = $true;  Id = "lessons" }
-        @{ Label = "Custom skills";        Desc = "adversarial-review, paper-reading, humanizer";   Default = $true;  Id = "skills" }
+        @{ Label = "Custom skills";        Desc = "paper-reading, humanizer";                       Default = $true;  Id = "skills" }
         @{ Label = "Python rules";         Desc = "PEP 8, pytest, type hints, bandit";              Default = $false; Id = "rules-python" }
         @{ Label = "TypeScript rules";     Desc = "Zod, Playwright, immutability";                  Default = $false; Id = "rules-ts" }
         @{ Label = "Go rules";             Desc = "gofmt, table-driven tests, gosec";               Default = $false; Id = "rules-go" }
-        @{ Label = "Plugins (13)";         Desc = "superpowers, code-review, playwright, ...";      Default = $true;  Id = "plugins-essential" }
+        @{ Label = "Plugins (14)";         Desc = "superpowers, code-review, codex, playwright, ...";      Default = $true;  Id = "plugins-essential" }
         @{ Label = "claude-mem";           Desc = "Cross-session memory (~3k tokens/session)";      Default = $false; Id = "plugins-claude-mem" }
         @{ Label = "AI Research plugins";  Desc = "fine-tuning, inference, optimization, ...";      Default = $false; Id = "plugins-ai-research" }
         @{ Label = "claude-health";        Desc = "Health check & wellness dashboard";               Default = $false; Id = "plugins-health" }
@@ -440,7 +442,7 @@ function Install-Settings {
         Write-Info "Would smart-merge settings.json"
         Write-Info "  - env: incoming as defaults, existing overrides"
         Write-Info "  - permissions.allow: union of arrays"
-        Write-Info "  - enabledPlugins: merged, existing keys take priority"
+        Write-Info "  - enabledPlugins: union (new plugins added, existing preserved)"
         Write-Info "  - hooks.SessionStart: deduplicated by matcher"
         Write-Info "  - statusLine: incoming takes priority"
         return
@@ -482,8 +484,8 @@ function Install-Settings {
         $overAllow = if ($existing.permissions -and $existing.permissions.allow) { @($existing.permissions.allow) } else { @() }
         $mergedAllow = @($baseAllow + $overAllow | Select-Object -Unique)
 
-        # enabledPlugins: merge, existing wins
-        $mergedPlugins = & $mergeHt $incoming.enabledPlugins $existing.enabledPlugins
+        # enabledPlugins: union (new plugins added, existing preserved)
+        $mergedPlugins = & $mergeHt $existing.enabledPlugins $incoming.enabledPlugins
 
         # hooks.SessionStart: deduplicate by matcher (last wins)
         $sessionHooks = [ordered]@{}
@@ -603,6 +605,15 @@ function Install-Skills {
     Write-Info "Installing custom skills..."
     $skillsDir = Join-Path $CLAUDE_DIR "skills"
     New-Item -ItemType Directory -Path $skillsDir -Force | Out-Null
+
+    # Migration: remove renamed/deleted skills from previous installs
+    foreach ($oldSkill in @("update", "adversarial-review")) {
+        $oldPath = Join-Path $skillsDir $oldSkill
+        if (Test-Path $oldPath) {
+            Remove-Item $oldPath -Recurse -Force
+            Write-Ok "Removed legacy skill: $oldSkill"
+        }
+    }
 
     Get-ChildItem (Join-Path $SCRIPT_DIR "skills") -Directory | ForEach-Object {
         $skill = $_.Name

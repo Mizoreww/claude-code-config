@@ -326,6 +326,7 @@ PLUGINS_ESSENTIAL=(
     "frontend-design@claude-plugins-official"
     "example-skills@anthropic-agent-skills"
     "github@claude-plugins-official"
+    "codex@openai-codex"
 )
 
 PLUGINS_CLAUDE_MEM=(
@@ -442,11 +443,11 @@ interactive_menu() {
         "Common rules|Coding style, git, security, testing|1|rules-common"
         "StatusLine|Gradient progress bar & usage display|1|statusline"
         "Lessons|lessons.md template + SessionStart hook|1|lessons"
-        "Custom skills|adversarial-review, paper-reading, humanizer|1|skills"
+        "Custom skills|paper-reading, humanizer|1|skills"
         "Python rules|PEP 8, pytest, type hints, bandit|0|rules-python"
         "TypeScript rules|Zod, Playwright, immutability|0|rules-ts"
         "Go rules|gofmt, table-driven tests, gosec|0|rules-go"
-        "Plugins (13)|superpowers, code-review, playwright, feature-dev...|1|plugins-essential"
+        "Plugins (14)|superpowers, code-review, codex, playwright, feature-dev...|1|plugins-essential"
         "claude-mem|Cross-session memory (~3k tokens/session)|0|plugins-claude-mem"
         "AI Research plugins|fine-tuning, inference, optimization...|0|plugins-ai-research"
         "claude-health|Health check & wellness dashboard|0|plugins-health"
@@ -778,7 +779,7 @@ install_settings() {
         info "Would smart-merge settings.json (jq available)"
         info "  - env: incoming as defaults, existing overrides"
         info "  - permissions.allow: union of arrays"
-        info "  - enabledPlugins: merged, existing keys take priority"
+        info "  - enabledPlugins: union (new plugins added, existing preserved)"
         if $INSTALL_LESSONS; then
             info "  - hooks.SessionStart: deduplicated by matcher"
         else
@@ -813,8 +814,8 @@ install_settings() {
     # permissions.allow: union
     (($base.permissions.allow // []) + ($over.permissions.allow // []) | unique) as $allow |
 
-    # enabledPlugins: merge, existing wins
-    (($base.enabledPlugins // {}) * ($over.enabledPlugins // {})) as $plugins |
+    # enabledPlugins: union (new plugins added, existing preserved)
+    (($over.enabledPlugins // {}) * ($base.enabledPlugins // {})) as $plugins |
 
     # hooks.SessionStart: deduplicate by matcher (only merge incoming if lessons selected)
     (if $inc_lh then
@@ -933,6 +934,14 @@ install_rules() {
 install_skills() {
     info "Installing custom skills..."
     mkdir -p "$CLAUDE_DIR/skills"
+
+    # Migration: remove renamed/deleted skills from previous installs
+    for old_skill in "update" "adversarial-review"; do
+        if [[ -d "$CLAUDE_DIR/skills/$old_skill" ]]; then
+            rm -rf "$CLAUDE_DIR/skills/$old_skill"
+            ok "Removed legacy skill: $old_skill"
+        fi
+    done
 
     for skill_dir in "$SCRIPT_DIR"/skills/*/; do
         [[ -d "$skill_dir" ]] || continue
@@ -1064,6 +1073,7 @@ install_plugins() {
         "thedotmack|thedotmack/claude-mem"
         "claude-health|tw93/claude-health"
         "pua-skills|tanweai/pua"
+        "openai-codex|openai/codex-plugin-cc"
     )
 
     # Build set of needed marketplaces (bash 3.2 compatible, no associative arrays)

@@ -1,5 +1,24 @@
 # 更新日志
 
+## [2.1.0] - 2026-04-02
+
+### 新特性
+- **Codex adversarial-review 插件**：用官方 [Codex 插件](https://github.com/openai/codex-plugin-cc)（`codex@openai-codex`）替代内置 `adversarial-review` skill。代码审查使用 `/codex:adversarial-review`，Codex 不可用时自动回退到 Claude 的 `code-reviewer` agent。插件已包含在默认安装中。
+- **技能重命名**：将 `/update` 恢复为 `/update-config`——目录从 `skills/update/` 重命名为 `skills/update-config/`。安装器升级时自动清理旧的 `skills/update` 和 `skills/adversarial-review` 目录。
+- **Smart-merge enabledPlugins 策略变更**：从"existing wins"改为"union"——新插件会自动补充到现有配置中，确保升级用户自动获得 `codex@openai-codex` 等新插件。
+
+### 设计理念
+- Codex 插件提供官方维护的对抗式审查实现，共享运行时，集成度更高
+- 带命名空间的技能命令（`update-config`）防止在所有仓库中意外覆盖项目级 `/update` 命令
+- enabledPlugins 的 union 合并确保升级用户自动获得新插件，同时保留现有配置
+- 回退审查路径（`code-reviewer` agent）确保没有 Codex CLI 也能正常审查代码
+
+### 注意事项
+- Codex 插件需要通过 `codex login` 认证（运行 `/codex:setup` 检查状态）
+- `docs/adversarial-review-showcase.md` 作为历史参考保留
+- CHANGELOG 中 `update_config` 和 `adversarial-review` 的历史条目保持原样
+- 安装器迁移逻辑自动删除旧的 `skills/update` 和 `skills/adversarial-review` 目录
+
 ## [2.0.0] - 2026-03-27
 
 ### 新特性
