@@ -616,7 +616,7 @@ optimization|Quantization & optimization (GPTQ, AWQ, Flash Attn)|0|plug-optimiza
     _group_count() {
         local g=$1 cnt=0
         for (( j=GROUP_START[g]; j<=GROUP_END[g]; j++ )); do
-            (( selected[j] )) && (( cnt++ ))
+            (( selected[j] )) && (( cnt++ )) || true
         done
         echo $cnt
     }
