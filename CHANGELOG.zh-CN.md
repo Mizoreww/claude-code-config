@@ -3,24 +3,32 @@
 ## [2.2.0] - 2026-04-02
 
 ### 新特性
-- **二级交互式菜单**：安装器改为主菜单显示分组摘要（`[已选/总数]`），Enter 进入子菜单单独选择。分组：Core、Language Rules、Review、Skills、Plugins — Official、Plugins — Community、Plugins — AI Research、MCP Servers。
-- **Review 工具选择器**：新增 "Review" 菜单分组，三个选项——`code-review` 插件（默认开启）、`adversarial-review` skill（默认开启）、Codex adversarial-review（默认关闭）。adversarial-review 和 Codex review 互斥。
-- **恢复 adversarial-review skill**：恢复 [adversarial-review](https://github.com/poteto/noodle) skill，在对立模型上生成审查者（Claude 派 Codex，Codex 派 Claude），使用不同批判视角（怀疑者、架构师、极简主义者）。
-- **新增 humanizer-zh skill**：添加来自 [op7418/Humanizer-zh](https://github.com/op7418/Humanizer-zh) 的中文去 AI 痕迹 skill。
-- **单插件粒度选择**：23 个插件现在都可以在交互式菜单中单独选择/取消（之前按组捆绑）。
+- **二级交互式菜单**：主菜单显示分组摘要（`[已选/总数]`），Enter/→ 进入子菜单，←/Esc 返回。分组：Core、Language Rules、Review、Skills、Plugins — Official/Community/AI Research、MCP Servers。
+- **Review 工具选择器**：新增 "Review" 分组——`code-review` 插件（开）、`adversarial-review` skill（开）、Codex CLI（关）。adversarial-review 和 Codex 互斥，自动联动。
+- **恢复 adversarial-review skill**：跨模型审查（Claude↔Codex），怀疑者/架构师/极简主义者三重视角，来自 [poteto/noodle](https://github.com/poteto/noodle)。
+- **新增 humanizer-zh skill**：来自 [op7418/Humanizer-zh](https://github.com/op7418/Humanizer-zh) 的中文去 AI 痕迹 skill。
+- **单插件粒度选择**：23 个插件可单独选择/取消（之前按组捆绑）。
 - **CLAUDE.md Code Review 段动态生成**：安装器根据选择的审查工具动态修改 CLAUDE.md 中的 Code Review 规则。
+- **方向键导航**：←/→ 支持子菜单进入/退出，与 Enter/Esc 并行。
+
+### Bug 修复（bash 5.x / Linux）
+- **根因**：`(( var++ ))` 从 0 自增时返回 exit code 1，bash 5.x `set -e` 下直接杀掉脚本（macOS bash 3.2 不受影响）。全部修复：`(( flat_idx++ ))` → `(( ++flat_idx ))`，`(( fixed++ ))` → `(( ++fixed ))`，`(( cnt++ ))` 加 `|| true`。
+- **`[[ ]] && cmd` 缺少 `|| true`**：`_enforce_review_mutex` 和主菜单 ALL 模式中，循环最后一次迭代不匹配时返回 1 导致崩溃。全部加了 `|| true`。
+- **`local _menu_active`**：bash 5.x 下 trap handler 无法访问 local 变量，改为全局变量。
+- **install.ps1**：删除残留的 `$groups` 覆盖，修复 Windows 交互式菜单崩溃。
+- **终端 fd 探测**：检测 `/dev/tty` 断开（EOF）时自动降级为非交互安装。仅拒绝 EOF (ret=1)，不误杀残留输入 (ret=0)。
+- **EXIT trap**：`_menu_cleanup` 加入 EXIT trap，异常退出时恢复终端。
 
 ### 设计考量
-- 二级菜单保持主界面紧凑，同时允许细粒度控制——无需滚动 40+ 项
-- 互斥机制防止冲突的审查工具同时安装
-- 恢复 adversarial-review 作为默认，无需 Codex 认证即可使用跨模型审查
-- 单插件粒度让用户跳过不需要的插件，减少 context window 消耗
+- 二级菜单紧凑且细粒度可控
+- 互斥机制防止审查工具冲突
+- 所有 `(( ))` 算术和 `[[ ]] && cmd` 模式已系统性加固 `set -e` 防护
+- fd 探测提供纵深防御，不产生误报
 
 ### 注意事项
-- `--all` 标志安装全部内容，默认使用 adversarial-review（非 Codex）
-- 选择 Codex adversarial-review 会自动安装 `codex@openai-codex` 插件
-- adversarial-review skill 需要安装 `codex` CLI 以实现跨模型审查
-- 旧 `skills/update` 清理保留；`skills/adversarial-review` 不再作为旧版处理
+- `--all` 安装全部内容，默认使用 adversarial-review（非 Codex）
+- 选择 Codex CLI 会自动安装 `codex@openai-codex` 插件
+- adversarial-review skill 需要 `codex` CLI 以实现跨模型审查
 
 ## [2.1.0] - 2026-04-02
 

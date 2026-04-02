@@ -3,24 +3,32 @@
 ## [2.2.0] - 2026-04-02
 
 ### Features
-- **Two-level interactive menu**: Installer now uses a main menu with group summaries (`[selected/total]`) and sub-menus for individual item selection. Groups: Core, Language Rules, Review, Skills, Plugins — Official, Plugins — Community, Plugins — AI Research, MCP Servers.
-- **Review tool selector**: New "Review" menu group with three options — `code-review` plugin (default ON), `adversarial-review` skill (default ON), and Codex adversarial-review (default OFF). The adversarial-review skill and Codex review are mutually exclusive.
-- **Restored adversarial-review skill**: Brought back the [adversarial-review](https://github.com/poteto/noodle) skill that spawns cross-model reviewers (Claude spawns Codex, Codex spawns Claude) with distinct critical lenses (Skeptic, Architect, Minimalist).
-- **New humanizer-zh skill**: Added Chinese humanizer skill from [op7418/Humanizer-zh](https://github.com/op7418/Humanizer-zh) for removing AI writing patterns from Chinese text.
-- **Per-plugin granularity**: All 23 plugins can now be individually selected/deselected in the interactive menu (previously bundled into groups).
-- **Dynamic CLAUDE.md Code Review section**: The installer now rewrites the Code Review rule in CLAUDE.md based on the selected review tool (adversarial-review, Codex, or plain code-reviewer agent).
+- **Two-level interactive menu**: Main menu shows group summaries (`[selected/total]`); Enter/→ opens sub-menus, ←/Esc returns. Groups: Core, Language Rules, Review, Skills, Plugins — Official/Community/AI Research, MCP Servers.
+- **Review tool selector**: New "Review" group — `code-review` plugin (ON), `adversarial-review` skill (ON), Codex CLI (OFF). adversarial-review and Codex are mutually exclusive with auto-toggle.
+- **Restored adversarial-review skill**: Cross-model reviewers (Claude↔Codex) with Skeptic/Architect/Minimalist lenses from [poteto/noodle](https://github.com/poteto/noodle).
+- **New humanizer-zh skill**: Chinese AI writing pattern removal from [op7418/Humanizer-zh](https://github.com/op7418/Humanizer-zh).
+- **Per-plugin granularity**: All 23 plugins individually selectable (previously bundled into groups).
+- **Dynamic CLAUDE.md Code Review section**: Installer rewrites the Code Review rule based on selected review tool.
+- **Arrow key navigation**: ←/→ supported for sub-menu entry/exit in addition to Enter/Esc.
+
+### Bug Fixes (bash 5.x / Linux)
+- **Root cause**: `(( var++ ))` from 0 returns exit code 1 under bash 5.x `set -e`, silently killing the script. macOS bash 3.2 does not trigger `set -e` on this. Fixed all instances: `(( flat_idx++ ))` → `(( ++flat_idx ))`, `(( fixed++ ))` → `(( ++fixed ))`, `(( selected[j] )) && (( cnt++ ))` → added `|| true`.
+- **`[[ ]] && cmd` without `|| true`**: `_enforce_review_mutex` and main menu ALL handler crashed when the last loop iteration didn't match. Added `|| true` guards to all `[[ test ]] && assignment` patterns.
+- **`local _menu_active`**: Trap handlers couldn't access local variables under bash 5.x; changed to global.
+- **install.ps1**: Removed stale `$groups` override that destroyed menu data, causing Windows interactive menu crash.
+- **Terminal fd probe**: Detects broken `/dev/tty` (EOF) and falls back to non-interactive default install. Only rejects EOF (ret=1), not stray input bytes (ret=0).
+- **EXIT trap**: Added `_menu_cleanup` to EXIT trap to restore terminal on unexpected exit (prevents stuck alternate screen).
 
 ### Design Rationale
-- Two-level menu keeps the main view compact while allowing fine-grained control — no scrolling through 40+ items
+- Two-level menu keeps the main view compact while allowing fine-grained control
 - Mutual exclusion prevents conflicting review tools from being installed simultaneously
-- Restoring adversarial-review as default gives users the cross-model review experience without requiring Codex authentication
-- Per-plugin granularity lets users skip plugins they don't need, reducing context window consumption
+- All `(( ))` arithmetic and `[[ ]] && cmd` patterns now systematically protected against `set -e`
+- fd probe provides defense-in-depth without false positives
 
 ### Notes & Caveats
-- The `--all` flag installs everything with adversarial-review (not Codex) as the default review tool
-- Codex adversarial-review selection automatically installs the `codex@openai-codex` plugin
-- adversarial-review skill requires `codex` CLI installed for cross-model review
-- Legacy `skills/update` cleanup is preserved; `skills/adversarial-review` is no longer treated as legacy
+- `--all` installs everything with adversarial-review (not Codex) as default
+- Codex CLI selection automatically installs `codex@openai-codex` plugin
+- adversarial-review skill requires `codex` CLI for cross-model review
 
 ## [2.1.0] - 2026-04-02
 
