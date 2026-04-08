@@ -1,6 +1,6 @@
 # Plugins
 
-23 plugins across 8 marketplaces. Context7, GitHub, Playwright migrated from MCP to official plugins. Additionally, 3 DeepXiv academic research skills can be installed separately (fetched from GitHub at install time).
+23 plugins across 8 marketplaces + 3 DeepXiv academic research skills (fetched from GitHub at install time). Context7, GitHub, Playwright migrated from MCP to official plugins.
 
 ## Plugin List
 
@@ -28,9 +28,9 @@
 | [**distributed-training**](https://github.com/Orchestra-Research/AI-Research-SKILLs) | ai-research-skills | DeepSpeed, FSDP, Megatron-Core, Ray Train |
 | [**optimization**](https://github.com/Orchestra-Research/AI-Research-SKILLs) | ai-research-skills | AWQ, GPTQ, GGUF, Flash Attention, bitsandbytes |
 
-## DeepXiv — Academic Research Skills
+## DeepXiv Academic Research Skills
 
-Pulled from [github.com/DeepXiv/deepxiv_sdk](https://github.com/DeepXiv/deepxiv_sdk) at install time (always latest).
+Pulled from [github.com/DeepXiv/deepxiv_sdk](https://github.com/DeepXiv/deepxiv_sdk) at install time (always latest). Grouped under **Academic Research** alongside the AI Research plugins above.
 
 | Skill | What It Does |
 |-------|--------------|

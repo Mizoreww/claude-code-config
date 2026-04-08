@@ -256,21 +256,19 @@ function Show-InteractiveMenu {
             @{ Label = "claude-health";   Desc = "Health check & wellness dashboard"; Default = $false; Id = "plug-claude-health" }
             @{ Label = "PUA";             Desc = "AI agent productivity booster (pua, pua-en, pua-ja)"; Default = $false; Id = "plug-pua" }
         )}
-        @{ Label = "Plugins - AI Research"; Hint = ""; Items = @(
+        @{ Label = "Academic Research"; Hint = "plugins + DeepXiv skills from github.com/DeepXiv/deepxiv_sdk"; Items = @(
             @{ Label = "tokenization";    Desc = "Tokenizer training & usage";        Default = $false; Id = "plug-tokenization" }
             @{ Label = "fine-tuning";     Desc = "Model fine-tuning";                 Default = $false; Id = "plug-fine-tuning" }
             @{ Label = "post-training";   Desc = "Post-training (RLHF, DPO, GRPO)";  Default = $false; Id = "plug-post-training" }
             @{ Label = "inference-serving"; Desc = "Inference serving (vLLM, SGLang, TensorRT)"; Default = $false; Id = "plug-inference-serving" }
             @{ Label = "distributed-training"; Desc = "Distributed training (DeepSpeed, FSDP, Megatron)"; Default = $false; Id = "plug-distributed-training" }
             @{ Label = "optimization";    Desc = "Quantization & optimization (GPTQ, AWQ, Flash Attn)"; Default = $false; Id = "plug-optimization" }
-        )}
-        @{ Label = "MCP Servers"; Hint = ""; Items = @(
-            @{ Label = "Lark MCP server"; Desc = "Feishu/Lark integration";           Default = $false; Id = "mcp" }
-        )}
-        @{ Label = "DeepXiv - Academic Research"; Hint = "pulls latest skills from github.com/DeepXiv/deepxiv_sdk"; Items = @(
             @{ Label = "deepxiv-cli";      Desc = "arXiv/PMC paper search & reading CLI skill"; Default = $false; Id = "deepxiv-cli" }
             @{ Label = "deepxiv-trending-digest"; Desc = "Trending paper digest generation"; Default = $false; Id = "deepxiv-trending-digest" }
             @{ Label = "deepxiv-baseline-table"; Desc = "Baseline comparison table from papers"; Default = $false; Id = "deepxiv-baseline-table" }
+        )}
+        @{ Label = "MCP Servers"; Hint = ""; Items = @(
+            @{ Label = "Lark MCP server"; Desc = "Feishu/Lark integration";           Default = $false; Id = "mcp" }
         )}
     )
 
