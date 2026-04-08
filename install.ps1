@@ -10,9 +10,13 @@
     .\install.ps1 -Uninstall       # Uninstall everything
     .\install.ps1 -DryRun          # Preview changes
     # Remote install:
-    irm https://raw.githubusercontent.com/Mizoreww/awesome-claude-code-config/main/install.ps1 | iex
+    & ([scriptblock]::Create((irm https://raw.githubusercontent.com/Mizoreww/awesome-claude-code-config/main/install.ps1)))
 #>
 
+# When piped via `irm URL | iex`, PowerShell cannot bind param() correctly —
+# directory names from subcommands (e.g. "adversarial-review") leak as
+# positional arguments. Wrapping in & { ... } isolates the parameter scope.
+& {
 param(
     [switch]$All,
     [switch]$Uninstall,
@@ -1125,7 +1129,7 @@ Examples:
     .\install.ps1 -All             # Install everything
     .\install.ps1 -Uninstall       # Uninstall everything
     .\install.ps1 -DryRun -All     # Preview full install
-    irm $REPO_URL/raw/main/install.ps1 | iex  # Remote install (interactive selector)
+    & ([scriptblock]::Create((irm $REPO_URL/raw/main/install.ps1)))  # Remote install
 
 "@
 }
@@ -1290,3 +1294,4 @@ function Main {
 }
 
 Main
+} @args
