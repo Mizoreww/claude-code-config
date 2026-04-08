@@ -505,27 +505,23 @@ github|GitHub integration|1|plug-github")
 claude-health|Health check & wellness dashboard|0|plug-claude-health
 PUA|AI agent productivity booster (pua, pua-en, pua-ja)|0|plug-pua")
 
-    # Group 6: Plugins — AI Research
-    GROUP_LABELS+=("Plugins — AI Research")
-    GROUP_HINTS+=("")
+    # Group 6: Academic Research (AI Research plugins + DeepXiv skills)
+    GROUP_LABELS+=("Academic Research")
+    GROUP_HINTS+=("plugins + DeepXiv skills from github.com/DeepXiv/deepxiv_sdk")
     GROUP_ITEMS+=("tokenization|Tokenizer training & usage|0|plug-tokenization
 fine-tuning|Model fine-tuning|0|plug-fine-tuning
 post-training|Post-training (RLHF, DPO, GRPO)|0|plug-post-training
 inference-serving|Inference serving (vLLM, SGLang, TensorRT)|0|plug-inference-serving
 distributed-training|Distributed training (DeepSpeed, FSDP, Megatron)|0|plug-distributed-training
-optimization|Quantization & optimization (GPTQ, AWQ, Flash Attn)|0|plug-optimization")
+optimization|Quantization & optimization (GPTQ, AWQ, Flash Attn)|0|plug-optimization
+deepxiv-cli|arXiv/PMC paper search & reading CLI skill|0|deepxiv-cli
+deepxiv-trending-digest|Trending paper digest generation|0|deepxiv-trending-digest
+deepxiv-baseline-table|Baseline comparison table from papers|0|deepxiv-baseline-table")
 
     # Group 7: MCP Servers
     GROUP_LABELS+=("MCP Servers")
     GROUP_HINTS+=("")
     GROUP_ITEMS+=("Lark MCP server|Feishu/Lark integration|0|mcp")
-
-    # Group 8: DeepXiv — Academic Research
-    GROUP_LABELS+=("DeepXiv — Academic Research")
-    GROUP_HINTS+=("pulls latest skills from github.com/DeepXiv/deepxiv_sdk")
-    GROUP_ITEMS+=("deepxiv-cli|arXiv/PMC paper search & reading CLI skill|0|deepxiv-cli
-deepxiv-trending-digest|Trending paper digest generation|0|deepxiv-trending-digest
-deepxiv-baseline-table|Baseline comparison table from papers|0|deepxiv-baseline-table")
 
     local num_groups=${#GROUP_LABELS[@]}
 

@@ -97,9 +97,8 @@ Running `./install.sh` with no arguments launches an interactive menu where you 
     [3/4] Skills                   paper-reading, humanizer, update-config...
     [12/12] Plugins — Official     superpowers, context7, playwright...
     [0/3] Plugins — Community      claude-mem, claude-health, PUA
-    [0/6] Plugins — AI Research    fine-tuning, inference, optimization...
+    [0/9] Academic Research        fine-tuning, optimization, deepxiv-cli...
     [0/1] MCP Servers              Lark/Feishu
-    [0/3] DeepXiv — Academic Research  deepxiv-cli, deepxiv-trending-digest, deepxiv-baseline-table...
 
      [ Submit ]
 ```
@@ -118,9 +117,8 @@ The **Review** group lets you choose between [adversarial-review](https://github
 | Skills (4) | paper-reading, humanizer, humanizer-zh, update-config | humanizer-zh Off, rest On |
 | Plugins — Official (12) | everything-claude-code, superpowers, context7, commit-commands, document-skills, playwright, feature-dev, code-simplifier, ralph-loop, frontend-design, example-skills, github | All On |
 | Plugins — Community (3) | claude-mem, claude-health, PUA | All Off |
-| Plugins — AI Research (6) | tokenization, fine-tuning, post-training, inference-serving, distributed-training, optimization | All Off |
+| Academic Research (9) | tokenization, fine-tuning, post-training, inference-serving, distributed-training, optimization, deepxiv-cli, deepxiv-trending-digest, deepxiv-baseline-table | All Off |
 | MCP Servers (1) | Lark MCP server | Off |
-| DeepXiv — Academic Research (3) | deepxiv-cli, deepxiv-trending-digest, deepxiv-baseline-table | All Off |
 
 ### CLI Flags
 
@@ -258,16 +256,19 @@ golang/       → gofmt, table-driven tests, gosec
 | [**health**](https://github.com/tw93/claude-health) | claude-health | Health check and wellness dashboard for Claude Code sessions |
 | [**pua**](https://github.com/tanweai/pua) | pua-skills | AI agent productivity booster — forces exhaustive problem-solving with multi-language support (CN/EN/JA) |
 
-**Plugins — AI Research** (6) — select in the interactive menu or included with `--all`:
+**Academic Research** (9) — select in the interactive menu or included with `--all`:
 
-| Plugin | Marketplace | What It Does |
-|--------|-------------|--------------|
+| Plugin / Skill | Source | What It Does |
+|----------------|--------|--------------|
 | [**tokenization**](https://github.com/Orchestra-Research/AI-Research-SKILLs) | ai-research-skills | HuggingFace Tokenizers, SentencePiece |
 | [**fine-tuning**](https://github.com/Orchestra-Research/AI-Research-SKILLs) | ai-research-skills | Axolotl, LLaMA-Factory, PEFT, Unsloth |
 | [**post-training**](https://github.com/Orchestra-Research/AI-Research-SKILLs) | ai-research-skills | GRPO, RLHF, DPO, SimPO |
 | [**inference-serving**](https://github.com/Orchestra-Research/AI-Research-SKILLs) | ai-research-skills | vLLM, SGLang, TensorRT-LLM, llama.cpp |
 | [**distributed-training**](https://github.com/Orchestra-Research/AI-Research-SKILLs) | ai-research-skills | DeepSpeed, FSDP, Megatron-Core, Ray Train |
 | [**optimization**](https://github.com/Orchestra-Research/AI-Research-SKILLs) | ai-research-skills | AWQ, GPTQ, GGUF, Flash Attention, bitsandbytes |
+| [**deepxiv-cli**](https://github.com/DeepXiv/deepxiv_sdk) | DeepXiv (GitHub) | arXiv/PMC paper search & reading via CLI. Hybrid search (BM25 + Vector) across 2M+ papers. |
+| [**deepxiv-trending-digest**](https://github.com/DeepXiv/deepxiv_sdk) | DeepXiv (GitHub) | Generate markdown digests of trending academic papers (last 7 days). |
+| [**deepxiv-baseline-table**](https://github.com/DeepXiv/deepxiv_sdk) | DeepXiv (GitHub) | Build baseline comparison tables from research papers. |
 
 See [`plugins/README.md`](plugins/README.md) for installation details.
 
@@ -284,9 +285,6 @@ CLAUDE.md includes a **Version Changelog** rule: when making version-level chang
 | **[humanizer](https://github.com/blader/humanizer)** | Detect and remove AI writing patterns from text. Based on Wikipedia's "Signs of AI writing" guide, identifies 24 patterns across content, language, style, and communication categories (significance inflation, AI vocabulary, em dash overuse, sycophantic tone, etc.) and rewrites text to sound natural. |
 | **[humanizer-zh](https://github.com/op7418/Humanizer-zh)** | Chinese version of humanizer. Detect and remove AI writing patterns from Chinese text, making it sound more natural and human-written. |
 | **update-config** | In-session update command. Type `/update-config` in Claude Code to check for new versions and re-run the interactive installer — no need to leave the session. |
-| **[deepxiv-cli](https://github.com/DeepXiv/deepxiv_sdk)** | arXiv/PMC paper search & reading via CLI. Hybrid search (BM25 + Vector) across 2M+ papers, section-by-section reading, built-in AI agent for analysis. Pulled from GitHub at install time (always latest). |
-| **[deepxiv-trending-digest](https://github.com/DeepXiv/deepxiv_sdk)** | Generate markdown digests of trending academic papers (last 7 days). Automated workflow: pull trending → brief each → rank → deep-read top picks → structured markdown report. |
-| **[deepxiv-baseline-table](https://github.com/DeepXiv/deepxiv_sdk)** | Build baseline comparison tables from research papers. Systematizes searching, screening, and extracting benchmark data into structured markdown tables. |
 
 Place custom skills in `skills/<name>/SKILL.md`.
 
