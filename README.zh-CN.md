@@ -96,6 +96,7 @@ skills/rules  → python-patterns、golang-patterns、frontend-patterns
 | superpowers | [obra/superpowers](https://github.com/obra/superpowers) | 完整原生 superpowers 集合，含 brainstorming、计划执行、review handoff、worktree 等 |
 | everything-claude-code | [affaan-m/everything-claude-code](https://github.com/affaan-m/everything-claude-code) | 语言模式、测试、安全、验证 |
 | anthropic skills packs | [anthropics/skills](https://github.com/anthropics/skills) | 文档处理、前端设计、画布/艺术、MCP builder |
+| DeepXiv skills | [DeepXiv/deepxiv_sdk](https://github.com/DeepXiv/deepxiv_sdk) | 安装时始终拉取最新 DeepXiv 研究工作流（`deepxiv-cli`、`deepxiv-baseline-table`、`deepxiv-trending-digest`） |
 | AI research skills | [zechenzhangAGI/AI-research-SKILLs](https://github.com/zechenzhangAGI/AI-research-SKILLs) | 分词、微调、后训练、推理服务、分布式训练、优化 |
 
 Superpowers 采用仓库当前的原生发现安装方式：
@@ -108,6 +109,15 @@ Superpowers 采用仓库当前的原生发现安装方式：
 - `adversarial-review`（`skills/adversarial-review/SKILL.md`）— 跨模型对抗式代码审查，通过对立 AI CLI 执行（来自 [poteto/noodle](https://github.com/poteto/noodle/tree/main/.agents/skills/adversarial-review)）
 - `humanizer`（`skills/humanizer/SKILL.md`）— 检测并去除文本中的 AI 写作痕迹（来自 [blader/humanizer](https://github.com/blader/humanizer)）
 - `update_config`（`skills/update/SKILL.md`）— 将已安装的 Codex 配置更新到最新 `codex` 分支版本
+
+DeepXiv 技能会在每次执行 `install.sh` 时像 superpowers 一样从上游重新安装：
+- `deepxiv-cli`
+- `deepxiv-baseline-table`
+- `deepxiv-trending-digest`
+
+这些 DeepXiv 技能依赖 PATH 中可用的 `deepxiv` CLI。可通过 `pip install deepxiv-sdk` 安装；如果还想使用 MCP 与内置 research agent，可安装 `pip install "deepxiv-sdk[all]"`。
+
+如果系统里缺少 `deepxiv`，安装器只会给出提示，不会自动帮你安装该包。
 
 ### 版本变更日志策略
 

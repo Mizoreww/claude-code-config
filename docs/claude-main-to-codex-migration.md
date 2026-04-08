@@ -18,7 +18,8 @@ This document explains how concepts from the repository's `main` branch map to t
 - Lessons-based self-correction loop
 - Core multi-agent role setup
 - Context7, GitHub, Playwright, Lark, and OpenAI docs integrations
-- Bundled local skills (`paper-reading`, `adversarial-review`, `humanizer`)
+- Bundled local skills (`paper-reading`, `adversarial-review`, `humanizer`, `update_config`)
+- Install-time upstream skills from DeepXiv (`deepxiv-cli`, `deepxiv-baseline-table`, `deepxiv-trending-digest`)
 - Open-source skill bootstrapping from superpowers / everything-claude-code / anthropics/skills / AI-research-SKILLs
 
 ## What does **not** migrate 1:1

@@ -96,6 +96,7 @@ This keeps common principles and language-specific practices aligned.
 | superpowers | [obra/superpowers](https://github.com/obra/superpowers) | full native superpowers set, including brainstorming, plan execution, review handoff, worktrees |
 | everything-claude-code | [affaan-m/everything-claude-code](https://github.com/affaan-m/everything-claude-code) | language patterns, testing, security, verification |
 | anthropic skills packs | [anthropics/skills](https://github.com/anthropics/skills) | document tools, frontend design, canvas/art, MCP builder |
+| DeepXiv skills | [DeepXiv/deepxiv_sdk](https://github.com/DeepXiv/deepxiv_sdk) | latest DeepXiv research workflows (`deepxiv-cli`, `deepxiv-baseline-table`, `deepxiv-trending-digest`) fetched fresh during install |
 | AI research skills | [zechenzhangAGI/AI-research-SKILLs](https://github.com/zechenzhangAGI/AI-research-SKILLs) | tokenization, fine-tuning, post-training, inference, distributed training, optimization |
 
 Superpowers are installed using the repo's current native-discovery flow:
@@ -108,6 +109,15 @@ Bundled local skills in this repo:
 - `adversarial-review` (`skills/adversarial-review/SKILL.md`) — cross-model adversarial code review via opposite AI CLI (from [poteto/noodle](https://github.com/poteto/noodle/tree/main/.agents/skills/adversarial-review))
 - `humanizer` (`skills/humanizer/SKILL.md`) — detect and remove AI writing patterns from text (from [blader/humanizer](https://github.com/blader/humanizer))
 - `update_config` (`skills/update/SKILL.md`) — update the installed Codex config to the latest `codex` branch version
+
+DeepXiv skills are installed from upstream on every `install.sh` run, similar to superpowers:
+- `deepxiv-cli`
+- `deepxiv-baseline-table`
+- `deepxiv-trending-digest`
+
+These DeepXiv skills require the `deepxiv` CLI to be available on PATH. Install it with `pip install deepxiv-sdk` (or `pip install "deepxiv-sdk[all]"` if you also want MCP + the built-in research agent).
+
+The installer only warns if `deepxiv` is missing; it does not auto-install the package for you.
 
 ### Version Changelog Policy
 

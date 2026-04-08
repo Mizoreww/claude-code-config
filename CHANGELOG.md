@@ -1,5 +1,35 @@
 # Changelog
 
+## [1.6.0] - 2026-04-08
+
+### Features
+- Installer now refreshes `deepxiv-cli`, `deepxiv-baseline-table`, and `deepxiv-trending-digest` directly from `DeepXiv/deepxiv_sdk` on every install run
+- Bash and PowerShell installers now remove existing DeepXiv skill directories before reinstalling them from upstream
+- Installers now warn when the `deepxiv` CLI runtime is missing instead of attempting to install it automatically
+- Documentation now describes DeepXiv as an install-time upstream dependency instead of a bundled local skill copy
+
+### Design Rationale
+- DeepXiv changes frequently enough that mirroring superpowers-style upstream installs is a better fit than snapshotting local copies in this repo
+- Reinstalling the managed DeepXiv skills ensures repeat installs actually refresh to the latest upstream version instead of silently keeping stale copies
+
+### Notes & Caveats
+- DeepXiv skill refresh still depends on the skill installer being available and GitHub being reachable during install
+- The `deepxiv` CLI itself is still a separate runtime dependency and must be installed on PATH by the user
+
+## [1.5.0] - 2026-04-08
+
+### Features
+- Added bundled DeepXiv skills: `deepxiv-cli`, `deepxiv-baseline-table`, and `deepxiv-trending-digest`
+- Installer uninstall tracking now includes the three DeepXiv skills on both bash and PowerShell paths
+- README, Chinese README, and migration notes now document the new DeepXiv skill set and its CLI dependency
+
+### Design Rationale
+- DeepXiv's progressive paper-reading workflows complement the existing research-oriented Codex setup without requiring a separate plugin system
+- Bundling the upstream skills directly in this repo keeps local installs reproducible and ensures the installer can copy them like other repo-local skills
+
+### Notes & Caveats
+- These skills expect the `deepxiv` CLI to already be installed and available on PATH, typically via `pip install deepxiv-sdk`
+
 ## [1.4.0] - 2026-03-20
 
 ### Features

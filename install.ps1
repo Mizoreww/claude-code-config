@@ -85,7 +85,10 @@ $MANAGED_SKILLS = @(
     "paper-reading",
     "adversarial-review",
     "humanizer",
-    "update"
+    "update",
+    "deepxiv-cli",
+    "deepxiv-baseline-table",
+    "deepxiv-trending-digest"
 )
 
 $LEGACY_SUPERPOWERS_SKILLS = @(
@@ -332,6 +335,45 @@ function Install-SkillPaths {
     }
 }
 
+function Reinstall-SkillPaths {
+    param([string]$Repo, [string[]]$Paths)
+
+    if ($DryRun) {
+        Write-Info "Would reinstall from ${Repo}: $($Paths -join ', ')"
+        return
+    }
+
+    foreach ($path in $Paths) {
+        $skill = Split-Path $path -Leaf
+        $dest = Join-Path $CODEX_DIR "skills/$skill"
+        if (Test-Path $dest) {
+            Remove-Item -Recurse -Force $dest
+            Write-Ok "Removed existing skill before reinstall: $skill"
+        }
+    }
+
+    $py = if (Get-Command "python3" -ErrorAction SilentlyContinue) { "python3" } else { "python" }
+    & $py $INSTALLER --repo $Repo --path @Paths
+    if ($LASTEXITCODE -ne 0) {
+        Write-Warn "Skill reinstall from $Repo returned non-zero"
+    }
+}
+
+function Warn-MissingDeepXivCli {
+    if ($DryRun) {
+        Write-Info "Would check whether deepxiv CLI is installed and warn if missing"
+        return
+    }
+
+    if (Get-Command "deepxiv" -ErrorAction SilentlyContinue) {
+        Write-Info "Detected deepxiv CLI on PATH"
+        return
+    }
+
+    Write-Warn "deepxiv CLI not found on PATH. DeepXiv skills are installed, but the runtime is missing."
+    Write-Warn "Install it manually with: pip install `"deepxiv-sdk[all]`""
+}
+
 function Remove-LegacySuperPowersSkills {
     $removed = $false
     foreach ($skill in $LEGACY_SUPERPOWERS_SKILLS) {
@@ -451,6 +493,10 @@ function Install-Skills {
                 "skills/frontend-patterns", "skills/security-review", "skills/tdd-workflow", "skills/verification-loop",
                 "skills/api-design", "skills/database-migrations"
             )
+            Reinstall-SkillPaths "DeepXiv/deepxiv_sdk" @(
+                "skills/deepxiv-cli", "skills/deepxiv-baseline-table", "skills/deepxiv-trending-digest"
+            )
+            Warn-MissingDeepXivCli
         }
 
         Install-LocalSkills

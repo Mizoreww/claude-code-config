@@ -56,6 +56,9 @@ MANAGED_SKILLS=(
   adversarial-review
   humanizer
   update
+  deepxiv-cli
+  deepxiv-baseline-table
+  deepxiv-trending-digest
 )
 
 LEGACY_SUPERPOWERS_SKILLS=(
@@ -379,6 +382,42 @@ install_skill_paths() {
   python3 "$INSTALLER" --repo "$repo" --path "$@" || warn "Skill install from $repo returned non-zero (possibly already installed)"
 }
 
+reinstall_skill_paths() {
+  local repo="$1"
+  shift
+
+  if $DRY_RUN; then
+    info "Would reinstall from $repo: $*"
+    return 0
+  fi
+
+  local path skill_name
+  for path in "$@"; do
+    skill_name=$(basename "$path")
+    if [[ -e "$CODEX_DIR/skills/$skill_name" ]]; then
+      rm -rf "$CODEX_DIR/skills/$skill_name"
+      ok "Removed existing skill before reinstall: $skill_name"
+    fi
+  done
+
+  python3 "$INSTALLER" --repo "$repo" --path "$@" || warn "Skill reinstall from $repo returned non-zero"
+}
+
+warn_missing_deepxiv_cli() {
+  if $DRY_RUN; then
+    info "Would check whether deepxiv CLI is installed and warn if missing"
+    return 0
+  fi
+
+  if command -v deepxiv >/dev/null 2>&1; then
+    info "Detected deepxiv CLI on PATH"
+    return 0
+  fi
+
+  warn "deepxiv CLI not found on PATH. DeepXiv skills are installed, but the runtime is missing."
+  warn "Install it manually with: pip install \"deepxiv-sdk[all]\""
+}
+
 cleanup_legacy_superpowers_skills() {
   local removed=false
 
@@ -476,6 +515,11 @@ install_skills() {
         skills/python-patterns skills/python-testing skills/golang-patterns skills/golang-testing \
         skills/frontend-patterns skills/security-review skills/tdd-workflow skills/verification-loop \
         skills/api-design skills/database-migrations
+
+      reinstall_skill_paths DeepXiv/deepxiv_sdk \
+        skills/deepxiv-cli skills/deepxiv-baseline-table skills/deepxiv-trending-digest
+
+      warn_missing_deepxiv_cli
     fi
 
     install_local_skills
