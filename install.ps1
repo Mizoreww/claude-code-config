@@ -67,9 +67,9 @@ function Invoke-Retry {
 
 # --- Remote install detection ----------------------------------------------
 
-$SCRIPT_DIR = ""
-$REMOTE_MODE = $false
-$InstallWarnings = 0
+$script:SCRIPT_DIR = ""
+$script:REMOTE_MODE = $false
+$script:InstallWarnings = 0
 
 function Initialize-ScriptDir {
     $script:SCRIPT_DIR = $PSScriptRoot
