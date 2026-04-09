@@ -1,8 +1,8 @@
-[Main English](https://github.com/Mizoreww/awesome-claude-code-config/blob/main/README.md) | [Main 中文](https://github.com/Mizoreww/awesome-claude-code-config/blob/main/README.zh-CN.md) | **Codex English** | [Codex 中文](./README.zh-CN.md)
+[Source English](https://github.com/Mizoreww/awesome-claude-code-config/blob/main/README.md) | [Source 中文](https://github.com/Mizoreww/awesome-claude-code-config/blob/main/README.zh-CN.md) | **Codex English** | [Codex 中文](./README.zh-CN.md)
 
 # Codex Configuration
 
-Production-ready configuration for [Codex CLI](https://github.com/openai/codex) — one-command install of global instructions, multi-agent roles, layered coding standards through skills, MCP integration, custom status bar, and a lessons-driven self-improvement loop. Companion branch to the [Claude Code main config](https://github.com/Mizoreww/awesome-claude-code-config/tree/main).
+Production-ready configuration for [Codex CLI](https://github.com/openai/codex) — an interactive installer plus one-command full install of global instructions, multi-agent roles, layered coding standards through skills, MCP integration, custom status bar, and a lessons-driven self-improvement loop. This branch is Codex-first and keeps a small compatibility bridge for users migrating from the [Claude Code main config](https://github.com/Mizoreww/awesome-claude-code-config/tree/main).
 
 ## Directory Structure
 
@@ -36,17 +36,56 @@ bash install.sh
 
 Then restart Codex.
 
+## Interactive Installer
+
+The Codex branch now uses the same two-level interactive selector UX on both shells, and the menu groups, defaults, and install targets are Codex-native.
+
+### Bash
+
+```bash
+bash install.sh
+bash install.sh --all
+bash install.sh --dry-run
+```
+
+### PowerShell
+
+```powershell
+pwsh -NoProfile -File .\install.ps1
+pwsh -NoProfile -File .\install.ps1 -All
+pwsh -NoProfile -File .\install.ps1 -DryRun
+```
+
+Behavior notes:
+
+- Bash plain no-arg runs are interactive when a terminal is available; if it cannot open a terminal, it warns and falls back to a non-interactive full install.
+- PowerShell plain no-arg runs are interactive when console I/O is available; if it cannot use the console, it warns and falls back to a non-interactive full install.
+- In Bash, `--dry-run` previews the full install non-interactively.
+- In PowerShell, `-DryRun` alone previews the full install non-interactively.
+- PowerShell treats an empty interactive submission as a no-op.
+
+### Codex menu groups and defaults
+
+| Group | Items | Default |
+|-------|-------|---------|
+| Core | `AGENTS.md`, `config.toml`, `lessons.md` | On |
+| Agents | `explorer`, `reviewer`, `docs-researcher` | On |
+| Skills — Recommended | `superpowers`, `document-skills`, `example-skills`, `coding-foundations`, `paper-reading`, `humanizer`, `adversarial-review`, `update` | On |
+| Skills — AI Research | `tokenization`, `fine-tuning`, `post-training`, `distributed-training`, `inference-serving`, `optimization`, `deepxiv` | Off |
+| MCP Servers | `context7`, `github`, `playwright`, `openaiDeveloperDocs`, `lark-mcp` | On except `lark-mcp` |
+
 ## Installer Options
 
 ```bash
-./install.sh                         # install all (core + mcp + all skills)
-./install.sh --core                 # only AGENTS.md / lessons.md / config.toml / agents/*
-./install.sh --mcp                  # only MCP servers
-./install.sh --skills core          # only core skill sets
-./install.sh --skills ai-research   # only AI research skill sets
-./install.sh --version              # source/installed/remote version info
-./install.sh --uninstall --skills   # uninstall managed skills only
-./install.sh --dry-run              # preview changes
+./install.sh                         # interactive selector when a terminal is available
+./install.sh --all                   # non-interactive full install
+./install.sh --core                  # only AGENTS.md / lessons.md / config.toml / agents/*
+./install.sh --mcp                   # only MCP servers
+./install.sh --skills core           # only core skill sets
+./install.sh --skills ai-research    # only AI research skill sets
+./install.sh --version               # source/installed/remote version info
+./install.sh --uninstall --skills    # uninstall managed skills only
+./install.sh --dry-run               # non-interactive full preview
 ```
 
 ## Key Features
@@ -94,7 +133,7 @@ This keeps common principles and language-specific practices aligned.
 | Skill Set | Source | Coverage |
 |----------|--------|----------|
 | superpowers | [obra/superpowers](https://github.com/obra/superpowers) | full native superpowers set, including brainstorming, plan execution, review handoff, worktrees |
-| everything-claude-code | [affaan-m/everything-claude-code](https://github.com/affaan-m/everything-claude-code) | language patterns, testing, security, verification |
+| coding-foundations | [affaan-m/everything-claude-code](https://github.com/affaan-m/everything-claude-code) | language patterns, testing, security, verification (Codex-facing label for this upstream pack) |
 | anthropic skills packs | [anthropics/skills](https://github.com/anthropics/skills) | document tools, frontend design, canvas/art, MCP builder |
 | DeepXiv skills | [DeepXiv/deepxiv_sdk](https://github.com/DeepXiv/deepxiv_sdk) | latest DeepXiv research workflows (`deepxiv-cli`, `deepxiv-baseline-table`, `deepxiv-trending-digest`) fetched fresh during install |
 | AI research skills | [zechenzhangAGI/AI-research-SKILLs](https://github.com/zechenzhangAGI/AI-research-SKILLs) | tokenization, fine-tuning, post-training, inference, distributed training, optimization |
@@ -110,14 +149,12 @@ Bundled local skills in this repo:
 - `humanizer` (`skills/humanizer/SKILL.md`) — detect and remove AI writing patterns from text (from [blader/humanizer](https://github.com/blader/humanizer))
 - `update_config` (`skills/update/SKILL.md`) — update the installed Codex config to the latest `codex` branch version
 
-DeepXiv skills are installed from upstream on every `install.sh` run, similar to superpowers:
+DeepXiv skills are refreshed from upstream on every `install.sh` run, similar to superpowers:
 - `deepxiv-cli`
 - `deepxiv-baseline-table`
 - `deepxiv-trending-digest`
 
-These DeepXiv skills require the `deepxiv` CLI to be available on PATH. Install it with `pip install deepxiv-sdk` (or `pip install "deepxiv-sdk[all]"` if you also want MCP + the built-in research agent).
-
-The installer only warns if `deepxiv` is missing; it does not auto-install the package for you.
+For Codex users, no separate local `deepxiv` CLI installation is required. Keeping these skills refreshed inside Codex is enough for the supported workflow in this repo.
 
 ### Version Changelog Policy
 
@@ -145,15 +182,15 @@ Default MCP servers in `config.toml`:
 
 ### Adversarial Code Review
 
-AGENTS.md includes a **Code Review** rule: whenever a code review is needed, invoke the `adversarial-review` skill (from [poteto/noodle](https://github.com/poteto/noodle/tree/main/.agents/skills/adversarial-review)). This skill spawns reviewers on the **opposite AI model's CLI** (`claude -p` for Codex users, `codex exec` for Claude users), producing cross-model adversarial analysis with structured verdicts (PASS / CONTESTED / REJECT).
+AGENTS.md includes a **Code Review** rule: whenever a code review is needed, invoke the `adversarial-review` skill (from [poteto/noodle](https://github.com/poteto/noodle/tree/main/.agents/skills/adversarial-review)). In Codex sessions, this skill can call the opposite model's CLI (`claude -p`) to produce cross-model adversarial analysis with structured verdicts (PASS / CONTESTED / REJECT); the reciprocal `codex exec` path remains documented inside the skill for compatibility with other environments.
 
-## Migrating from the Claude Code main branch
+## Compatibility for users migrating from the Claude Code main branch
 
 See [`docs/claude-main-to-codex-migration.md`](./docs/claude-main-to-codex-migration.md) for a concrete mapping of:
 
 - `CLAUDE.md` → `AGENTS.md`
 - `settings.json` → `config.toml`
-- Claude plugins → Codex skills / MCP / built-ins
+- Claude-era plugins → Codex skills / MCP / built-ins
 - `mcp/mcp-servers.json` → `[mcp_servers.*]` in `config.toml`
 
 ## Security Note
@@ -173,12 +210,9 @@ If you prefer safer defaults, adjust these in `~/.codex/config.toml`.
 
 ## Acknowledgements
 
-- [**Claude Code Best Practice**](https://github.com/shanraisshan/claude-code-best-practice) by shanraisshan — Comprehensive best practices, workflows, and implementation patterns for Claude Code
-- [**Working for 10 Claude Codes**](https://mp.weixin.qq.com/s/9qPD3gXj3HLmrKC64Q6fbQ) by Hu Yuanming — practical experience running multiple coding agents in parallel
 - [**Harness Engineering**](https://openai.com/index/harness-engineering/) by OpenAI — engineers shift from writing code to designing systems with agents
 - [**Anthropic Engineering**](https://www.anthropic.com/engineering) by Anthropic — Engineering blog covering agent development, evaluation methods, and building reliable AI systems
 - [**OpenAI Engineering**](https://openai.com/news/engineering/) by OpenAI — Engineering blog sharing technical insights on building and scaling AI systems
-- [**Claude Code in Action**](https://anthropic.skilljar.com/claude-code-in-action) by Anthropic Academy — official workflow training
 
 ## License
 

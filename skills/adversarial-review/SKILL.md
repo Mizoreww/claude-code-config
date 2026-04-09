@@ -1,9 +1,9 @@
 ---
 name: adversarial-review
 description: >-
-  Adversarial code review using the opposite model. Spawns 1–3 reviewers on the
-  opposing model (Claude spawns Codex, Codex spawns Claude) to challenge work from
-  distinct critical lenses. Triggers: "adversarial review".
+  Adversarial code review using the opposite model's CLI. Spawns 1–3 reviewers on
+  the opposing model (Codex sessions typically spawn Claude; Claude sessions spawn
+  Codex) to challenge work from distinct critical lenses. Triggers: "adversarial review".
 schedule: "After cook sessions that produce large diffs (200+ lines), implement plan phases, or complete a planning session"
 ---
 
@@ -12,6 +12,9 @@ schedule: "After cook sessions that produce large diffs (200+ lines), implement 
 Spawn reviewers on the **opposite model** to challenge work. Reviewers attack from distinct
 lenses grounded in brain principles. The deliverable is a synthesized verdict — do NOT make
 changes.
+
+In Codex sessions this usually means invoking Claude via `claude -p`; in Claude sessions it
+means invoking Codex via `codex exec`.
 
 **Hard constraint:** Reviewers MUST run via the opposite model's CLI (`codex exec` or
 `claude -p`). Do NOT use subagents, the Agent tool, or any internal delegation mechanism as

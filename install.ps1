@@ -6,9 +6,11 @@
 
 .DESCRIPTION
   Install Codex configuration files on Windows. PowerShell equivalent of install.sh.
+  Running without component flags launches an interactive selector.
+  Use -All for non-interactive full install.
 
 .PARAMETER All
-  Install everything (default)
+  Install everything non-interactively
 
 .PARAMETER Core
   Install AGENTS.md, lessons.md, config.toml, agents/*
@@ -36,6 +38,7 @@
 
 .EXAMPLE
   .\install.ps1
+  .\install.ps1 -All
   .\install.ps1 -Skills -SkillGroup core
   .\install.ps1 -Skills -SkillGroup ai-research
   .\install.ps1 -Uninstall -Skills
@@ -70,6 +73,35 @@ $SUPERPOWERS_REPO_URL = "https://github.com/obra/superpowers.git"
 $SUPERPOWERS_DIR      = Join-Path $CODEX_DIR "superpowers"
 $AGENTS_SKILLS_DIR    = Join-Path $HOME ".agents/skills"
 $SUPERPOWERS_LINK     = Join-Path $AGENTS_SKILLS_DIR "superpowers"
+
+$script:InteractiveMode = $false
+$script:InteractiveSelectionHasAny = $false
+$script:SelectCoreAgentsMd = $true
+$script:SelectCoreConfig = $true
+$script:SelectCoreLessons = $true
+$script:SelectAgentExplorer = $true
+$script:SelectAgentReviewer = $true
+$script:SelectAgentDocsResearcher = $true
+$script:SelectSkillSuperpowers = $true
+$script:SelectSkillDocumentSkills = $true
+$script:SelectSkillExampleSkills = $true
+$script:SelectSkillCodingFoundations = $true
+$script:SelectSkillPaperReading = $true
+$script:SelectSkillHumanizer = $true
+$script:SelectSkillAdversarialReview = $true
+$script:SelectSkillUpdate = $true
+$script:SelectAiTokenization = $false
+$script:SelectAiFineTuning = $false
+$script:SelectAiPostTraining = $false
+$script:SelectAiDistributedTraining = $false
+$script:SelectAiInferenceServing = $false
+$script:SelectAiOptimization = $false
+$script:SelectAiDeepXiv = $false
+$script:SelectMcpContext7 = $true
+$script:SelectMcpGithub = $true
+$script:SelectMcpPlaywright = $true
+$script:SelectMcpOpenaiDeveloperDocs = $true
+$script:SelectMcpLark = $false
 
 $MANAGED_SKILLS = @(
     "frontend-design", "pdf", "docx", "pptx", "xlsx", "canvas-design", "algorithmic-art", "mcp-builder",
@@ -164,9 +196,11 @@ function Show-Usage {
 Usage: .\install.ps1 [OPTIONS]
 
 Install Codex configuration files.
+Running without component flags launches an interactive selector.
+Use -All for non-interactive full install.
 
 Options:
-  -All                       Install everything (default)
+  -All                       Install everything non-interactively
   -Core                      Install AGENTS.md, lessons.md, config.toml, agents/*
   -Mcp                       Install MCP servers only
   -Skills [-SkillGroup GROUP] Install skills only. GROUP: core, ai-research, all (default: all)
@@ -255,12 +289,668 @@ function Set-VersionStamp {
     }
 }
 
+function Reset-InteractiveSelections {
+    $script:SelectCoreAgentsMd = $true
+    $script:SelectCoreConfig = $true
+    $script:SelectCoreLessons = $true
+    $script:SelectAgentExplorer = $true
+    $script:SelectAgentReviewer = $true
+    $script:SelectAgentDocsResearcher = $true
+    $script:SelectSkillSuperpowers = $true
+    $script:SelectSkillDocumentSkills = $true
+    $script:SelectSkillExampleSkills = $true
+    $script:SelectSkillCodingFoundations = $true
+    $script:SelectSkillPaperReading = $true
+    $script:SelectSkillHumanizer = $true
+    $script:SelectSkillAdversarialReview = $true
+    $script:SelectSkillUpdate = $true
+    $script:SelectAiTokenization = $false
+    $script:SelectAiFineTuning = $false
+    $script:SelectAiPostTraining = $false
+    $script:SelectAiDistributedTraining = $false
+    $script:SelectAiInferenceServing = $false
+    $script:SelectAiOptimization = $false
+    $script:SelectAiDeepXiv = $false
+    $script:SelectMcpContext7 = $true
+    $script:SelectMcpGithub = $true
+    $script:SelectMcpPlaywright = $true
+    $script:SelectMcpOpenaiDeveloperDocs = $true
+    $script:SelectMcpLark = $false
+}
+
+function Copy-SelectedFile {
+    param(
+        [bool]$Selected,
+        [string]$Source,
+        [string]$Target,
+        [string]$Label,
+        [switch]$SkipIfExists
+    )
+
+    if (-not $Selected) { return }
+
+    if ($SkipIfExists -and (Test-Path $Target)) {
+        Write-Warn "$Target exists -- skipping (merge manually if needed)"
+        return
+    }
+
+    if (Test-Path $Target) {
+        Backup-IfExists $Target
+    }
+
+    if ($DryRun) {
+        Write-Info "Would copy: $Label -> $Target"
+    } else {
+        $parent = Split-Path $Target -Parent
+        if ($parent) {
+            New-Item -ItemType Directory -Path $parent -Force | Out-Null
+        }
+        Copy-Item $Source $Target -Force
+        Write-Ok "$Label installed"
+    }
+}
+
+function Copy-SelectedDirectory {
+    param(
+        [bool]$Selected,
+        [string]$Source,
+        [string]$Target,
+        [string]$Label
+    )
+
+    if (-not $Selected) { return }
+
+    if (Test-Path $Target) {
+        Backup-IfExists $Target
+    }
+
+    if ($DryRun) {
+        Write-Info "Would copy: $Label -> $Target"
+    } else {
+        $parent = Split-Path $Target -Parent
+        if ($parent) {
+            New-Item -ItemType Directory -Path $parent -Force | Out-Null
+        }
+        if (Test-Path $Target) {
+            Remove-Item -Recurse -Force $Target
+        }
+        Copy-Item $Source $Target -Recurse -Force
+        Write-Ok "$Label installed"
+    }
+}
+
+function Install-SelectedCoreFiles {
+    Write-Info "Installing selected core files..."
+
+    if (-not $DryRun) {
+        New-Item -ItemType Directory -Path $CODEX_DIR -Force | Out-Null
+    }
+
+    Copy-SelectedFile -Selected $script:SelectCoreAgentsMd `
+        -Source (Join-Path $script:SCRIPT_DIR "AGENTS.md") `
+        -Target (Join-Path $CODEX_DIR "AGENTS.md") `
+        -Label "AGENTS.md"
+    Copy-SelectedFile -Selected $script:SelectCoreLessons `
+        -Source (Join-Path $script:SCRIPT_DIR "lessons.md") `
+        -Target (Join-Path $CODEX_DIR "lessons.md") `
+        -Label "lessons.md"
+
+    if ($script:SelectCoreConfig) {
+        Copy-SelectedFile -Selected $true `
+            -Source (Join-Path $script:SCRIPT_DIR "config.toml") `
+            -Target (Join-Path $CODEX_DIR "config.toml") `
+            -Label "config.toml" `
+            -SkipIfExists
+    }
+}
+
+function Install-SelectedAgents {
+    $anySelected = $script:SelectAgentExplorer -or $script:SelectAgentReviewer -or $script:SelectAgentDocsResearcher
+    if (-not $anySelected) { return }
+
+    Write-Info "Installing selected agents..."
+    if (-not $DryRun) {
+        New-Item -ItemType Directory -Path (Join-Path $CODEX_DIR "agents") -Force | Out-Null
+    }
+
+    Copy-SelectedFile -Selected $script:SelectAgentExplorer `
+        -Source (Join-Path $script:SCRIPT_DIR "agents/explorer.toml") `
+        -Target (Join-Path $CODEX_DIR "agents/explorer.toml") `
+        -Label "agents/explorer.toml"
+    Copy-SelectedFile -Selected $script:SelectAgentReviewer `
+        -Source (Join-Path $script:SCRIPT_DIR "agents/reviewer.toml") `
+        -Target (Join-Path $CODEX_DIR "agents/reviewer.toml") `
+        -Label "agents/reviewer.toml"
+    Copy-SelectedFile -Selected $script:SelectAgentDocsResearcher `
+        -Source (Join-Path $script:SCRIPT_DIR "agents/docs-researcher.toml") `
+        -Target (Join-Path $CODEX_DIR "agents/docs-researcher.toml") `
+        -Label "agents/docs-researcher.toml"
+}
+
+function Install-SelectedRecommendedSkills {
+    $remoteAvailable = Test-Path $INSTALLER
+    $needsRemote = $script:SelectSkillDocumentSkills -or $script:SelectSkillExampleSkills -or $script:SelectSkillCodingFoundations
+    if (-not $remoteAvailable -and $needsRemote) {
+        Write-Warn "skill-installer not found at $INSTALLER"
+        Write-Warn "Remote skill packs that depend on it will be skipped."
+    }
+
+    if ($script:SelectSkillSuperpowers) {
+        Install-Superpowers
+    }
+
+    if ($remoteAvailable) {
+        if ($script:SelectSkillDocumentSkills) {
+            Install-SkillPaths "anthropics/skills" @(
+                "skills/pdf", "skills/docx", "skills/pptx", "skills/xlsx"
+            )
+        }
+
+        if ($script:SelectSkillExampleSkills) {
+            Install-SkillPaths "anthropics/skills" @(
+                "skills/frontend-design", "skills/canvas-design", "skills/algorithmic-art", "skills/mcp-builder"
+            )
+        }
+
+        if ($script:SelectSkillCodingFoundations) {
+            Install-SkillPaths "affaan-m/everything-claude-code" @(
+                "skills/python-patterns", "skills/python-testing", "skills/golang-patterns", "skills/golang-testing",
+                "skills/frontend-patterns", "skills/security-review", "skills/tdd-workflow", "skills/verification-loop",
+                "skills/api-design", "skills/database-migrations"
+            )
+        }
+    }
+
+    if ($script:SelectSkillPaperReading -or $script:SelectSkillHumanizer -or $script:SelectSkillAdversarialReview -or $script:SelectSkillUpdate) {
+        if (-not $DryRun) {
+            New-Item -ItemType Directory -Path (Join-Path $CODEX_DIR "skills") -Force | Out-Null
+        }
+    }
+
+    if ($script:SelectSkillPaperReading) {
+        Copy-SelectedDirectory -Selected $true `
+            -Source (Join-Path $script:SCRIPT_DIR "skills/paper-reading") `
+            -Target (Join-Path $CODEX_DIR "skills/paper-reading") `
+            -Label "skills/paper-reading/"
+    }
+    if ($script:SelectSkillHumanizer) {
+        Copy-SelectedDirectory -Selected $true `
+            -Source (Join-Path $script:SCRIPT_DIR "skills/humanizer") `
+            -Target (Join-Path $CODEX_DIR "skills/humanizer") `
+            -Label "skills/humanizer/"
+    }
+    if ($script:SelectSkillAdversarialReview) {
+        Copy-SelectedDirectory -Selected $true `
+            -Source (Join-Path $script:SCRIPT_DIR "skills/adversarial-review") `
+            -Target (Join-Path $CODEX_DIR "skills/adversarial-review") `
+            -Label "skills/adversarial-review/"
+    }
+    if ($script:SelectSkillUpdate) {
+        Copy-SelectedDirectory -Selected $true `
+            -Source (Join-Path $script:SCRIPT_DIR "skills/update") `
+            -Target (Join-Path $CODEX_DIR "skills/update") `
+            -Label "skills/update/"
+    }
+}
+
+function Install-SelectedAiSkills {
+    $remoteAvailable = Test-Path $INSTALLER
+    $needsRemote = $script:SelectAiTokenization -or $script:SelectAiFineTuning -or $script:SelectAiPostTraining -or `
+        $script:SelectAiDistributedTraining -or $script:SelectAiInferenceServing -or $script:SelectAiOptimization -or `
+        $script:SelectAiDeepXiv
+    if (-not $remoteAvailable -and $needsRemote) {
+        Write-Warn "skill-installer not found at $INSTALLER"
+        Write-Warn "AI research skill packs that depend on it will be skipped."
+        return
+    }
+
+    if ($script:SelectAiTokenization) {
+        Install-SkillPaths "zechenzhangAGI/AI-research-SKILLs" @(
+            "02-tokenization/huggingface-tokenizers", "02-tokenization/sentencepiece"
+        )
+    }
+    if ($script:SelectAiFineTuning) {
+        Install-SkillPaths "zechenzhangAGI/AI-research-SKILLs" @(
+            "03-fine-tuning/axolotl", "03-fine-tuning/llama-factory", "03-fine-tuning/peft", "03-fine-tuning/unsloth"
+        )
+    }
+    if ($script:SelectAiPostTraining) {
+        Install-SkillPaths "zechenzhangAGI/AI-research-SKILLs" @(
+            "06-post-training/grpo-rl-training", "06-post-training/openrlhf", "06-post-training/simpo",
+            "06-post-training/trl-fine-tuning", "06-post-training/verl"
+        )
+    }
+    if ($script:SelectAiDistributedTraining) {
+        Install-SkillPaths "zechenzhangAGI/AI-research-SKILLs" @(
+            "08-distributed-training/deepspeed", "08-distributed-training/pytorch-fsdp2",
+            "08-distributed-training/megatron-core", "08-distributed-training/ray-train"
+        )
+    }
+    if ($script:SelectAiInferenceServing) {
+        Install-SkillPaths "zechenzhangAGI/AI-research-SKILLs" @(
+            "12-inference-serving/vllm", "12-inference-serving/sglang",
+            "12-inference-serving/tensorrt-llm", "12-inference-serving/llama-cpp"
+        )
+    }
+    if ($script:SelectAiOptimization) {
+        Install-SkillPaths "zechenzhangAGI/AI-research-SKILLs" @(
+            "10-optimization/awq", "10-optimization/gptq", "10-optimization/gguf",
+            "10-optimization/flash-attention", "10-optimization/bitsandbytes"
+        )
+    }
+    if ($script:SelectAiDeepXiv) {
+        Reinstall-SkillPaths "DeepXiv/deepxiv_sdk" @(
+            "skills/deepxiv-cli", "skills/deepxiv-baseline-table", "skills/deepxiv-trending-digest"
+        )
+    }
+}
+
+function Install-SelectedMcp {
+    Write-Info "Installing selected MCP servers..."
+
+    if (-not (Get-Command "codex" -ErrorAction SilentlyContinue)) {
+        Write-Warn "codex CLI not found. Skip MCP setup."
+        return
+    }
+
+    if ($script:SelectMcpContext7) {
+        if ($DryRun) {
+            Write-Info "Would add MCP server: context7"
+        } else {
+            codex mcp add context7 -- npx -y @upstash/context7-mcp 2>$null
+        }
+    }
+    if ($script:SelectMcpGithub) {
+        if ($DryRun) {
+            Write-Info "Would add MCP server: github"
+        } else {
+            codex mcp add github --env GITHUB_PERSONAL_ACCESS_TOKEN=YOUR_GITHUB_PAT -- npx -y @modelcontextprotocol/server-github 2>$null
+        }
+    }
+    if ($script:SelectMcpPlaywright) {
+        if ($DryRun) {
+            Write-Info "Would add MCP server: playwright"
+        } else {
+            codex mcp add playwright -- npx -y "@playwright/mcp@latest" 2>$null
+        }
+    }
+    if ($script:SelectMcpOpenaiDeveloperDocs) {
+        if ($DryRun) {
+            Write-Info "Would add MCP server: openaiDeveloperDocs"
+        } else {
+            codex mcp add openaiDeveloperDocs --url https://developers.openai.com/mcp 2>$null
+        }
+    }
+    if ($script:SelectMcpLark) {
+        if ($DryRun) {
+            Write-Info "Would add MCP server: lark-mcp"
+        } else {
+            codex mcp add lark-mcp -- npx -y @larksuiteoapi/lark-mcp mcp -a YOUR_APP_ID -s YOUR_APP_SECRET 2>$null
+        }
+    }
+    Write-Ok "Selected MCP setup complete (existing entries are ignored)"
+}
+
+function Show-InteractiveMenu {
+    Reset-InteractiveSelections
+
+    if ([Console]::IsInputRedirected -or [Console]::IsOutputRedirected) {
+        Write-Warn "No interactive console is available; falling back to non-interactive full install"
+        $script:InteractiveMode = $false
+        $script:All = $true
+        $script:InteractiveSelectionHasAny = $true
+        return
+    }
+
+    $groups = @(
+        [pscustomobject]@{
+            Label = "Core"
+            Hint = ""
+            Items = @(
+                [pscustomobject]@{ Label = "AGENTS.md"; Description = "Global Codex instructions"; Default = $true;  StateVar = "SelectCoreAgentsMd" },
+                [pscustomobject]@{ Label = "config.toml"; Description = "Codex runtime config template"; Default = $true; StateVar = "SelectCoreConfig" },
+                [pscustomobject]@{ Label = "lessons.md"; Description = "Lessons source-of-truth"; Default = $true; StateVar = "SelectCoreLessons" }
+            )
+        },
+        [pscustomobject]@{
+            Label = "Agents"
+            Hint = ""
+            Items = @(
+                [pscustomobject]@{ Label = "explorer"; Description = "Code-path exploration agent"; Default = $true; StateVar = "SelectAgentExplorer" },
+                [pscustomobject]@{ Label = "reviewer"; Description = "Review/regression agent"; Default = $true; StateVar = "SelectAgentReviewer" },
+                [pscustomobject]@{ Label = "docs-researcher"; Description = "Docs/API verification agent"; Default = $true; StateVar = "SelectAgentDocsResearcher" }
+            )
+        },
+        [pscustomobject]@{
+            Label = "Skills - Recommended"
+            Hint = ""
+            Items = @(
+                [pscustomobject]@{ Label = "superpowers"; Description = "Planning and execution workflows"; Default = $true; StateVar = "SelectSkillSuperpowers" },
+                [pscustomobject]@{ Label = "document-skills"; Description = "PDF/DOCX/PPTX/XLSX skills pack"; Default = $true; StateVar = "SelectSkillDocumentSkills" },
+                [pscustomobject]@{ Label = "example-skills"; Description = "Frontend/art/MCP builder pack"; Default = $true; StateVar = "SelectSkillExampleSkills" },
+                [pscustomobject]@{ Label = "coding-foundations"; Description = "Patterns, testing, security (upstream everything-claude-code)"; Default = $true; StateVar = "SelectSkillCodingFoundations" },
+                [pscustomobject]@{ Label = "paper-reading"; Description = "Research paper summarization"; Default = $true; StateVar = "SelectSkillPaperReading" },
+                [pscustomobject]@{ Label = "humanizer"; Description = "Remove AI writing patterns"; Default = $true; StateVar = "SelectSkillHumanizer" },
+                [pscustomobject]@{ Label = "adversarial-review"; Description = "Cross-model adversarial review"; Default = $true; StateVar = "SelectSkillAdversarialReview" },
+                [pscustomobject]@{ Label = "update"; Description = "Update Codex config branch install"; Default = $true; StateVar = "SelectSkillUpdate" }
+            )
+        },
+        [pscustomobject]@{
+            Label = "Skills - AI Research"
+            Hint = ""
+            Items = @(
+                [pscustomobject]@{ Label = "tokenization"; Description = "Tokenizer training and usage"; Default = $false; StateVar = "SelectAiTokenization" },
+                [pscustomobject]@{ Label = "fine-tuning"; Description = "Fine-tuning workflows"; Default = $false; StateVar = "SelectAiFineTuning" },
+                [pscustomobject]@{ Label = "post-training"; Description = "RLHF / DPO / GRPO workflows"; Default = $false; StateVar = "SelectAiPostTraining" },
+                [pscustomobject]@{ Label = "distributed-training"; Description = "DeepSpeed / FSDP / Megatron / Ray"; Default = $false; StateVar = "SelectAiDistributedTraining" },
+                [pscustomobject]@{ Label = "inference-serving"; Description = "vLLM / SGLang / TensorRT / llama.cpp"; Default = $false; StateVar = "SelectAiInferenceServing" },
+                [pscustomobject]@{ Label = "optimization"; Description = "Quantization and optimization"; Default = $false; StateVar = "SelectAiOptimization" },
+                [pscustomobject]@{ Label = "deepxiv"; Description = "DeepXiv research workflow skills"; Default = $false; StateVar = "SelectAiDeepXiv" }
+            )
+        },
+        [pscustomobject]@{
+            Label = "MCP Servers"
+            Hint = ""
+            Items = @(
+                [pscustomobject]@{ Label = "context7"; Description = "Up-to-date library docs"; Default = $true; StateVar = "SelectMcpContext7" },
+                [pscustomobject]@{ Label = "github"; Description = "GitHub workflows"; Default = $true; StateVar = "SelectMcpGithub" },
+                [pscustomobject]@{ Label = "playwright"; Description = "Browser automation"; Default = $true; StateVar = "SelectMcpPlaywright" },
+                [pscustomobject]@{ Label = "openaiDeveloperDocs"; Description = "Official OpenAI docs MCP"; Default = $true; StateVar = "SelectMcpOpenaiDeveloperDocs" },
+                [pscustomobject]@{ Label = "lark-mcp"; Description = "Feishu/Lark integration"; Default = $false; StateVar = "SelectMcpLark" }
+            )
+        }
+    )
+
+    foreach ($group in $groups) {
+        foreach ($item in $group.Items) {
+            Set-Variable -Scope Script -Name $item.StateVar -Value $item.Default
+        }
+    }
+
+    $cursor = 0
+    $numGroups = $groups.Count
+
+    function Get-GroupCount {
+        param([object]$Group)
+        $count = 0
+        foreach ($item in $Group.Items) {
+            if (Get-Variable -Scope Script -Name $item.StateVar -ValueOnly) { $count++ }
+        }
+        return $count
+    }
+
+    function Set-GroupState {
+        param([object]$Group, [bool]$Value)
+        foreach ($item in $Group.Items) {
+            Set-Variable -Scope Script -Name $item.StateVar -Value $Value
+        }
+    }
+
+    function Reset-GroupDefaults {
+        param([object]$Group)
+        foreach ($item in $Group.Items) {
+            Set-Variable -Scope Script -Name $item.StateVar -Value $item.Default
+        }
+    }
+
+    function Draw-MainMenu {
+        Clear-Host
+        Write-Host "========================================="
+        Write-Host "  Codex Config Installer"
+        Write-Host "  $(Get-SourceVersion)"
+        Write-Host "========================================="
+        Write-Host ""
+        Write-Host "  Up/Down Navigate   Enter/Right Open   A All   N None   D Defaults   Q Quit"
+        Write-Host ""
+
+        for ($g = 0; $g -lt $numGroups; $g++) {
+            $group = $groups[$g]
+            $count = Get-GroupCount $group
+            $total = $group.Items.Count
+            $prefix = if ($g -eq $cursor) { ">" } else { " " }
+            Write-Host ("{0} [{1}/{2}] {3}" -f $prefix, $count, $total, $group.Label)
+        }
+
+        Write-Host ""
+        if ($cursor -eq $numGroups) {
+            Write-Host "> [ Submit ]"
+        } else {
+            Write-Host "  [ Submit ]"
+        }
+    }
+
+    function Draw-SubMenu {
+        param([object]$Group, [int]$SubCursor)
+        Clear-Host
+        Write-Host "========================================="
+        Write-Host "  $($Group.Label)"
+        if ($Group.Hint) { Write-Host "  ($($Group.Hint))" }
+        Write-Host "========================================="
+        Write-Host ""
+        Write-Host "  Up/Down Navigate   Space Toggle   Left/Esc/Enter Back"
+        Write-Host "  A All   N None   D Defaults"
+        Write-Host ""
+
+        for ($i = 0; $i -lt $Group.Items.Count; $i++) {
+            $item = $Group.Items[$i]
+            $value = Get-Variable -Scope Script -Name $item.StateVar -ValueOnly
+            $mark = if ($value) { "*" } else { " " }
+            $prefix = if ($i -eq $SubCursor) { ">" } else { " " }
+            Write-Host ("{0} [{1}] {2} - {3}" -f $prefix, $mark, $item.Label, $item.Description)
+        }
+
+        Write-Host ""
+        if ($SubCursor -eq $Group.Items.Count) {
+            Write-Host "> [ Back ]"
+        } else {
+            Write-Host "  [ Back ]"
+        }
+    }
+
+    function Read-Key {
+        $keyInfo = [Console]::ReadKey($true)
+        switch ($keyInfo.Key) {
+            'UpArrow' { return 'UP' }
+            'DownArrow' { return 'DOWN' }
+            'LeftArrow' { return 'LEFT' }
+            'RightArrow' { return 'RIGHT' }
+            'Enter' { return 'ENTER' }
+            'Spacebar' { return 'SPACE' }
+            'A' { return 'ALL' }
+            'N' { return 'NONE' }
+            'D' { return 'DEFAULT' }
+            'Q' { return 'QUIT' }
+            'Escape' { return 'ESC' }
+            default { return 'OTHER' }
+        }
+    }
+
+    while ($true) {
+        Draw-MainMenu
+        $key = Read-Key
+
+        switch ($key) {
+            'UP' {
+                if ($cursor -gt 0) { $cursor-- }
+            }
+            'DOWN' {
+                if ($cursor -lt $numGroups) { $cursor++ }
+            }
+            'ALL' {
+                foreach ($group in $groups) { Set-GroupState $group $true }
+            }
+            'NONE' {
+                foreach ($group in $groups) { Set-GroupState $group $false }
+            }
+            'DEFAULT' {
+                foreach ($group in $groups) { Reset-GroupDefaults $group }
+            }
+            'QUIT' {
+                Write-Host ""
+                Write-Info "Cancelled."
+                exit 0
+            }
+            'ENTER' {
+                if ($cursor -eq $numGroups) { break }
+                $group = $groups[$cursor]
+                $subCursor = 0
+                while ($true) {
+                    Draw-SubMenu -Group $group -SubCursor $subCursor
+                    $subKey = Read-Key
+                    switch ($subKey) {
+                        'UP' {
+                            if ($subCursor -gt 0) { $subCursor-- }
+                        }
+                        'DOWN' {
+                            if ($subCursor -lt $group.Items.Count) { $subCursor++ }
+                        }
+                        'SPACE' {
+                            if ($subCursor -lt $group.Items.Count) {
+                                $item = $group.Items[$subCursor]
+                                $current = Get-Variable -Scope Script -Name $item.StateVar -ValueOnly
+                                Set-Variable -Scope Script -Name $item.StateVar -Value (-not $current)
+                            }
+                        }
+                        'ALL' {
+                            Set-GroupState $group $true
+                        }
+                        'NONE' {
+                            Set-GroupState $group $false
+                        }
+                        'DEFAULT' {
+                            Reset-GroupDefaults $group
+                        }
+                        'LEFT' { break }
+                        'ESC' { break }
+                        'ENTER' {
+                            if ($subCursor -eq $group.Items.Count) {
+                                break
+                            }
+                            $item = $group.Items[$subCursor]
+                            $current = Get-Variable -Scope Script -Name $item.StateVar -ValueOnly
+                            Set-Variable -Scope Script -Name $item.StateVar -Value (-not $current)
+                        }
+                    }
+                    if ($subKey -in @('LEFT', 'ESC')) { break }
+                    if ($subKey -eq 'ENTER' -and $subCursor -eq $group.Items.Count) { break }
+                }
+            }
+            'RIGHT' {
+                if ($cursor -lt $numGroups) {
+                    $group = $groups[$cursor]
+                    $subCursor = 0
+                    while ($true) {
+                        Draw-SubMenu -Group $group -SubCursor $subCursor
+                        $subKey = Read-Key
+                        switch ($subKey) {
+                            'UP' {
+                                if ($subCursor -gt 0) { $subCursor-- }
+                            }
+                            'DOWN' {
+                                if ($subCursor -lt $group.Items.Count) { $subCursor++ }
+                            }
+                            'SPACE' {
+                                if ($subCursor -lt $group.Items.Count) {
+                                    $item = $group.Items[$subCursor]
+                                    $current = Get-Variable -Scope Script -Name $item.StateVar -ValueOnly
+                                    Set-Variable -Scope Script -Name $item.StateVar -Value (-not $current)
+                                }
+                            }
+                            'ALL' {
+                                Set-GroupState $group $true
+                            }
+                            'NONE' {
+                                Set-GroupState $group $false
+                            }
+                            'DEFAULT' {
+                                Reset-GroupDefaults $group
+                            }
+                            'LEFT' { break }
+                            'ESC' { break }
+                            'ENTER' {
+                                if ($subCursor -eq $group.Items.Count) {
+                                    break
+                                }
+                                $item = $group.Items[$subCursor]
+                                $current = Get-Variable -Scope Script -Name $item.StateVar -ValueOnly
+                                Set-Variable -Scope Script -Name $item.StateVar -Value (-not $current)
+                            }
+                        }
+                        if ($subKey -in @('LEFT', 'ESC')) { break }
+                        if ($subKey -eq 'ENTER' -and $subCursor -eq $group.Items.Count) { break }
+                    }
+                }
+            }
+        }
+
+        if ($cursor -eq $numGroups -and $key -eq 'ENTER') { break }
+    }
+
+    $coreSelected = $false
+    $skillsSelected = $false
+    $mcpSelected = $false
+
+    foreach ($group in $groups) {
+        foreach ($item in $group.Items) {
+            $selected = [bool](Get-Variable -Scope Script -Name $item.StateVar -ValueOnly)
+            switch ($item.StateVar) {
+                'SelectCoreAgentsMd' { if ($selected) { $coreSelected = $true } }
+                'SelectCoreConfig' { if ($selected) { $coreSelected = $true } }
+                'SelectCoreLessons' { if ($selected) { $coreSelected = $true } }
+                'SelectAgentExplorer' { if ($selected) { $coreSelected = $true } }
+                'SelectAgentReviewer' { if ($selected) { $coreSelected = $true } }
+                'SelectAgentDocsResearcher' { if ($selected) { $coreSelected = $true } }
+                'SelectSkillSuperpowers' { if ($selected) { $skillsSelected = $true } }
+                'SelectSkillDocumentSkills' { if ($selected) { $skillsSelected = $true } }
+                'SelectSkillExampleSkills' { if ($selected) { $skillsSelected = $true } }
+                'SelectSkillCodingFoundations' { if ($selected) { $skillsSelected = $true } }
+                'SelectSkillPaperReading' { if ($selected) { $skillsSelected = $true } }
+                'SelectSkillHumanizer' { if ($selected) { $skillsSelected = $true } }
+                'SelectSkillAdversarialReview' { if ($selected) { $skillsSelected = $true } }
+                'SelectSkillUpdate' { if ($selected) { $skillsSelected = $true } }
+                'SelectAiTokenization' { if ($selected) { $skillsSelected = $true } }
+                'SelectAiFineTuning' { if ($selected) { $skillsSelected = $true } }
+                'SelectAiPostTraining' { if ($selected) { $skillsSelected = $true } }
+                'SelectAiDistributedTraining' { if ($selected) { $skillsSelected = $true } }
+                'SelectAiInferenceServing' { if ($selected) { $skillsSelected = $true } }
+                'SelectAiOptimization' { if ($selected) { $skillsSelected = $true } }
+                'SelectAiDeepXiv' { if ($selected) { $skillsSelected = $true } }
+                'SelectMcpContext7' { if ($selected) { $mcpSelected = $true } }
+                'SelectMcpGithub' { if ($selected) { $mcpSelected = $true } }
+                'SelectMcpPlaywright' { if ($selected) { $mcpSelected = $true } }
+                'SelectMcpOpenaiDeveloperDocs' { if ($selected) { $mcpSelected = $true } }
+                'SelectMcpLark' { if ($selected) { $mcpSelected = $true } }
+            }
+        }
+    }
+
+    $script:InteractiveSelectionHasAny = ($coreSelected -or $skillsSelected -or $mcpSelected)
+    if (-not $script:InteractiveSelectionHasAny) {
+        Write-Info "No items selected. Nothing to do."
+        return
+    }
+
+    $script:InteractiveMode = $true
+    $script:All = $false
+    Set-Variable -Scope Script -Name Core -Value $coreSelected -Force
+    Set-Variable -Scope Script -Name Skills -Value $skillsSelected -Force
+    Set-Variable -Scope Script -Name Mcp -Value $mcpSelected -Force
+}
+
 # ============================================================
 # Install functions
 # ============================================================
 function Install-Core {
+    if ($InteractiveMode) {
+        Install-SelectedCoreFiles
+        Install-SelectedAgents
+        return
+    }
+
     Write-Info "Installing core files..."
-    New-Item -ItemType Directory -Path $CODEX_DIR -Force | Out-Null
+    if (-not $DryRun) {
+        New-Item -ItemType Directory -Path $CODEX_DIR -Force | Out-Null
+    }
 
     Backup-IfExists (Join-Path $CODEX_DIR "AGENTS.md")
     Backup-IfExists (Join-Path $CODEX_DIR "lessons.md")
@@ -296,6 +986,11 @@ function Install-Core {
 }
 
 function Install-Mcp {
+    if ($InteractiveMode) {
+        Install-SelectedMcp
+        return
+    }
+
     Write-Info "Installing MCP servers..."
 
     if (-not (Get-Command "codex" -ErrorAction SilentlyContinue)) {
@@ -357,21 +1052,6 @@ function Reinstall-SkillPaths {
     if ($LASTEXITCODE -ne 0) {
         Write-Warn "Skill reinstall from $Repo returned non-zero"
     }
-}
-
-function Warn-MissingDeepXivCli {
-    if ($DryRun) {
-        Write-Info "Would check whether deepxiv CLI is installed and warn if missing"
-        return
-    }
-
-    if (Get-Command "deepxiv" -ErrorAction SilentlyContinue) {
-        Write-Info "Detected deepxiv CLI on PATH"
-        return
-    }
-
-    Write-Warn "deepxiv CLI not found on PATH. DeepXiv skills are installed, but the runtime is missing."
-    Write-Warn "Install it manually with: pip install `"deepxiv-sdk[all]`""
 }
 
 function Remove-LegacySuperPowersSkills {
@@ -472,6 +1152,26 @@ function Install-LocalSkills {
 }
 
 function Install-Skills {
+    if ($InteractiveMode) {
+        Write-Info "Installing selected skills..."
+        Install-SelectedRecommendedSkills
+        Install-SelectedAiSkills
+
+        if ($script:SelectSkillPaperReading -or $script:SelectSkillHumanizer -or
+            $script:SelectSkillAdversarialReview -or $script:SelectSkillUpdate -or
+            $script:SelectSkillSuperpowers -or $script:SelectSkillDocumentSkills -or
+            $script:SelectSkillExampleSkills -or $script:SelectSkillCodingFoundations -or
+            $script:SelectAiTokenization -or $script:SelectAiFineTuning -or
+            $script:SelectAiPostTraining -or $script:SelectAiDistributedTraining -or
+            $script:SelectAiInferenceServing -or $script:SelectAiOptimization -or
+            $script:SelectAiDeepXiv) {
+            Write-Ok "Selected skills processed"
+        } else {
+            Write-Info "No selected skills to install"
+        }
+        return
+    }
+
     Write-Info "Installing skills (group: $SkillGroup)..."
 
     $remoteAvailable = Test-Path $INSTALLER
@@ -496,7 +1196,6 @@ function Install-Skills {
             Reinstall-SkillPaths "DeepXiv/deepxiv_sdk" @(
                 "skills/deepxiv-cli", "skills/deepxiv-baseline-table", "skills/deepxiv-trending-digest"
             )
-            Warn-MissingDeepXivCli
         }
 
         Install-LocalSkills
@@ -639,11 +1338,17 @@ try {
         exit 0
     }
 
-    # Determine what to install
-    $installAll    = $All -or (-not $Core -and -not $Mcp -and -not $Skills)
-    $installCore   = $Core
-    $installMcp    = $Mcp
-    $installSkills = $Skills
+    $hasExplicitInstallMode = $All -or $Core -or $Mcp -or $Skills
+    if (-not $hasExplicitInstallMode -and $DryRun) {
+        Write-Info "DRY RUN without component flags -> previewing full install non-interactively"
+        $script:All = $true
+    } elseif (-not $hasExplicitInstallMode) {
+        $script:InteractiveMode = $true
+        Show-InteractiveMenu
+        if ($script:InteractiveMode -and -not $script:InteractiveSelectionHasAny) {
+            exit 0
+        }
+    }
 
     Write-Host ""
     Write-Host "========================================="
@@ -657,16 +1362,18 @@ try {
         Write-Host ""
     }
 
-    New-Item -ItemType Directory -Path $CODEX_DIR -Force | Out-Null
+    if (-not $DryRun) {
+        New-Item -ItemType Directory -Path $CODEX_DIR -Force | Out-Null
+    }
 
-    if ($installAll) {
+    if ($All) {
         Install-Core
         Install-Mcp
         Install-Skills
     } else {
-        if ($installCore)   { Install-Core }
-        if ($installMcp)    { Install-Mcp }
-        if ($installSkills) { Install-Skills }
+        if ($Core)   { Install-Core }
+        if ($Mcp)    { Install-Mcp }
+        if ($Skills) { Install-Skills }
     }
 
     Set-VersionStamp

@@ -1,9 +1,9 @@
 ---
 name: update_config
-description: Update awesome-claude-code-config on the Codex branch to the latest version. Checks remote version, then re-runs the Codex installer. Use when user types /update_config or asks to update their Codex configuration.
+description: Update this Codex configuration from the repository's `codex` branch to the latest version. Checks the remote version, then re-runs the Codex installer. Use when the user types /update_config or asks to update their Codex configuration.
 ---
 
-# Update — awesome-claude-code-config (Codex)
+# Update — Codex branch configuration
 
 ## Overview
 
@@ -15,7 +15,7 @@ Run the following steps **in order**. Stop immediately if a step fails. Do **not
 
 ### Step 1: Check versions
 
-Use the current Codex version stamp, but also support the legacy Claude-era fallback file:
+Use the current Codex version stamp, but also support the legacy fallback file used by older installs:
 
 ```bash
 # Installed version
@@ -60,6 +60,6 @@ Tell the user the update is complete with the new version number.
 
 ## Notes
 
-- The skill targets the **Codex** branch, not the Claude Code `main` branch
+- The skill targets the repository's **`codex`** branch and keeps the old version-file path only for compatibility
 - `lessons.md` is preserved if it already exists
 - Restart Codex after updating so new config, skills, and MCP settings are fully picked up

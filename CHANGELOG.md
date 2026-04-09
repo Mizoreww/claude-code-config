@@ -1,5 +1,74 @@
 # Changelog
 
+## [1.7.3] - 2026-04-09
+
+### Features
+- Removed DeepXiv runtime-missing warnings from both installers so Codex installs no longer tell users to install a separate local `deepxiv` CLI
+- Updated English and Chinese README guidance to describe DeepXiv as skills refreshed into Codex on each install run
+- Extended the active cleanup spec/plan docs with the corrected DeepXiv installation model
+
+### Design Rationale
+- In this repo's supported Codex workflow, DeepXiv is consumed as an installed skill set inside Codex rather than as a separately managed local CLI runtime
+- Warning users about a missing standalone runtime created false setup friction and implied an unnecessary manual `pip install` step
+- Keeping the install model aligned across scripts and docs reduces confusion and avoids reintroducing the same misconception later
+
+### Notes & Caveats
+- This change removes the standalone `deepxiv` CLI requirement only for the Codex workflow documented by this repo
+- Upstream DeepXiv skills are still refreshed from `DeepXiv/deepxiv_sdk` during install
+- Historical changelog/spec documents may still mention the older runtime-warning behavior as part of the project record
+
+## [1.7.2] - 2026-04-09
+
+### Features
+- Standardized installer internals from Claude-oriented names to Codex-first names, including skill selector state variables and menu identifiers
+- Updated Codex-branch README navigation labels from `Main` to `Source` to reduce branch ambiguity while keeping links unchanged
+- Refreshed the active cleanup spec/plan docs so they document the deeper internal naming pass as well as the user-visible cleanup
+
+### Design Rationale
+- User-facing labels are not enough when the active implementation still encodes old naming in variables and menu IDs; consistent internals reduce future drift
+- Changing active implementation names is safer now that the compatibility boundary is explicit: preserve legacy file paths, but simplify current code paths
+- Historical migration docs and changelog entries remain factual records and should not be rewritten as if the old names never existed
+
+### Notes & Caveats
+- Legacy compatibility paths such as `~/.codex/.claude-code-config-version` are still preserved intentionally
+- Upstream source identifiers such as `affaan-m/everything-claude-code` are still unchanged where required for installation
+- Historical migration/design docs may still mention Claude-specific names when they are recording past decisions or migration mappings
+
+## [1.7.1] - 2026-04-09
+
+### Features
+- Reframed README and README.zh-CN so Codex is the default audience, while Claude-related material is limited to migration and compatibility notes
+- Renamed the user-facing recommended skill-pack label from `everything-claude-code` to `coding-foundations` in both installer UIs and docs, while keeping the upstream source path intact
+- Updated bundled `update_config` and `adversarial-review` skill docs to describe Claude-era paths as compatibility details instead of the main workflow
+
+### Design Rationale
+- Codex users should not need to parse Claude-first branding or menu labels to understand what to install; neutral presentation reduces migration friction
+- Preserving upstream repo names and legacy version-file fallback avoids breaking installs while still cleaning up the default user experience
+- Keeping a single migration document is clearer than scattering Claude-specific explanations throughout the primary setup docs
+
+### Notes & Caveats
+- Upstream install sources still include names such as `affaan-m/everything-claude-code`; only the user-facing display labels were changed
+- The legacy `~/.codex/.claude-code-config-version` path is still read for compatibility with older installs
+- `docs/claude-main-to-codex-migration.md` remains in the repo as the dedicated migration reference
+
+## [1.7.0] - 2026-04-08
+
+### Features
+- Added interactive Bash and PowerShell installer UIs for plain no-arg runs when a usable terminal/console is available; explicit dry-run preview paths remain non-interactive where implemented
+- Added Codex-native selectable groups for Core, Agents, Skills — Recommended, Skills — AI Research, and MCP Servers
+- Kept explicit CLI flags backward-compatible for non-interactive installs and previews (`--all` / `-All`, `--core` / `-Core`, `--mcp` / `-Mcp`, `--skills` / `-Skills`, `--dry-run` / `-DryRun`)
+
+### Design Rationale
+- The main-style menu flow gives Codex users a familiar selector while still presenting Codex-specific defaults and install targets
+- Preserving explicit flags avoids breaking scripts and automation that already depend on the installer’s non-interactive paths
+- Grouping the UI around core files, agents, recommended skills, AI research skills, and MCP servers matches the actual Codex distribution surface instead of a generic all-or-nothing install
+
+### Notes & Caveats
+- `~/.codex/config.toml` is still never overwritten automatically; users must merge template changes manually if they want them
+- Bash plain no-arg runs fall back to a non-interactive full install with a warning when no terminal is available
+- PowerShell plain no-arg runs fall back to a non-interactive full install with a warning when console I/O is unavailable
+- PowerShell explicitly treats an empty interactive submission as a no-op
+
 ## [1.6.0] - 2026-04-08
 
 ### Features
