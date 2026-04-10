@@ -1,5 +1,28 @@
 # Changelog
 
+## [2.3.0] - 2026-04-10
+
+### Features
+- **Adaptive statusline wrapping**: Statusline now dynamically wraps segments to the next line based on terminal width instead of being truncated. Uses visible-width calculation with ANSI-aware measurement.
+- **Adaptive progress bar sizing**: Context and 5h usage progress bars shrink (min 8 chars) when terminal space is tight, staying on the same line when possible.
+- **Smart terminal width detection**: Walks ancestor process file descriptors via `/proc/$PID/fd/` to find the real terminal in pipe contexts where `$COLUMNS` and `tput cols` are unreliable.
+- **DeepXiv SDK integration**: New Academic Research group with `deepxiv_sdk` plugin for academic paper search and analysis.
+
+### Bug Fixes
+- **COLUMNS=0 in pipe context**: Claude Code passes empty/zero `COLUMNS` to statusline subprocess; now detected and falls back to fd probing.
+- **macOS `wc -L` fallback**: `visible_len()` falls back to `${#stripped}` on platforms where `wc -L` is unavailable (BSD/macOS).
+- **Negative bar sizing clamp**: When preceding segments exceed available space, adaptive bar sizing now correctly clamps instead of silently using full 20-char width.
+- **Width cache**: Segment widths cached in parallel array, reducing subshell forks from ~13 to ~7 per render.
+
+### Design Rationale
+- Segment array architecture replaces string concatenation for clean separation of layout concerns
+- PPID fd walk is more correct than `/dev/pts/*` glob which could read another session's terminal
+- `visible_len()` uses `wc -L` (GNU) for emoji/CJK double-width accuracy with `${#}` fallback for portability
+
+### Notes & Caveats
+- Wrapping only occurs at segment boundaries; a single segment wider than terminal will overflow naturally
+- Hardcoded label overhead estimates (18/14 chars) may drift by 1-2 chars on edge cases
+
 ## [2.2.0] - 2026-04-02
 
 ### Features
