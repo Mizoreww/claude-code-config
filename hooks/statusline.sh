@@ -182,6 +182,18 @@ if ! $cache_is_fresh; then
     fi
 fi
 
+# --- Terminal width ---
+COLUMNS=${COLUMNS:-$(tput cols 2>/dev/null || echo 120)}
+
+# visible_len: compute display width of a string with ANSI escapes
+# Strips escape codes, then uses wc -L for accurate multi-byte/emoji width
+visible_len() {
+    local stripped
+    stripped=$(printf "%b" "$1" | sed $'s/\x1b\[[0-9;]*m//g')
+    # wc -L gives max display width (handles CJK/emoji double-width)
+    printf "%b" "$stripped" | wc -L 2>/dev/null | tr -d ' '
+}
+
 # --- Colors ---
 C_MODEL="\033[38;5;183m"
 C_DIR="\033[38;5;117m"
@@ -196,7 +208,7 @@ bar_colors=(71 72 78 114 150 186 222 221 220 214 208 202 196 160 124 88)
 BAR_W=20
 
 build_bar() {
-    local pct=$1 w=$BAR_W
+    local pct=$1 w=${2:-$BAR_W}
     local filled=$(( pct * w / 100 ))
     [ "$filled" -gt "$w" ] && filled=$w
     local empty=$(( w - filled ))
@@ -254,45 +266,76 @@ fmt_resets() {
     fi
 }
 
-# --- Separator ---
-sep="${C_SEP} \xe2\x94\x82 $C_R"
+# --- Assemble segments ---
+segments=()
 
-# --- Assemble (single line) ---
-out="${ICON_MODEL} ${C_MODEL}${model}${C_R}"
+# Segment 1: Model
+segments+=("${ICON_MODEL} ${C_MODEL}${model}${C_R}")
 
+# Segment 2: Directory
 if [ -n "$dir_name" ]; then
-    out+="${sep}${ICON_DIR} ${C_DIR}${dir_name}${C_R}"
+    segments+=("${ICON_DIR} ${C_DIR}${dir_name}${C_R}")
 fi
 
-# Virtual environment (conda > venv/poetry/pipenv)
+# Segment 3: Conda/venv
 conda_env="${CONDA_DEFAULT_ENV:-}"
 conda_env="$(basename "$conda_env")"
 venv="${VIRTUAL_ENV:-}"
 venv="$(basename "$venv")"
 
 if [ -n "$conda_env" ]; then
-    out+="${sep}${ICON_CONDA} ${C_CONDA}${conda_env}${C_R}"
+    segments+=("${ICON_CONDA} ${C_CONDA}${conda_env}${C_R}")
 elif [ -n "$venv" ]; then
-    out+="${sep}${ICON_CONDA} ${C_CONDA}${venv}${C_R}"
+    segments+=("${ICON_CONDA} ${C_CONDA}${venv}${C_R}")
 fi
 
+# Segment 4: Git branch
 if [ -n "$git_branch" ]; then
-    out+="${sep}${C_GIT}${ICON_GIT} ${git_branch}${C_R}"
+    segments+=("${C_GIT}${ICON_GIT} ${git_branch}${C_R}")
 fi
 
-# Context bar
+# Segment 5: Context bar
 ctx_pct_int=$(printf "%.0f" "$ctx_pct" 2>/dev/null || echo "$ctx_pct")
 ctx_bar=$(build_bar "$ctx_pct_int")
 ctx_fmt=$(fmt_ctx "$ctx_size")
-out+="${sep}${C_LABEL}context${C_R} ${ctx_bar} ${C_LABEL}${ctx_fmt}${C_R}"
+segments+=("${C_LABEL}context${C_R} ${ctx_bar} ${C_LABEL}${ctx_fmt}${C_R}")
 
-# 5-hour usage bar (from API)
+# Segment 6: 5-hour usage bar
 if [ -n "$usage_5h" ]; then
     usage_pct=$(printf "%.0f" "$usage_5h" 2>/dev/null || echo "$usage_5h")
     usage_bar=$(build_bar "$usage_pct")
     resets_fmt=$(fmt_resets "$usage_resets")
-    out+="${sep}${C_LABEL}5h${C_R} ${usage_bar}"
-    [ -n "$resets_fmt" ] && out+=" ${C_LABEL}${resets_fmt}${C_R}"
+    usage_seg="${C_LABEL}5h${C_R} ${usage_bar}"
+    [ -n "$resets_fmt" ] && usage_seg+=" ${C_LABEL}${resets_fmt}${C_R}"
+    segments+=("$usage_seg")
 fi
+
+# --- Wrap algorithm ---
+sep_str="${C_SEP} \xe2\x94\x82 ${C_R}"
+sep_visible_w=3  # " │ " is 3 visible characters
+
+out=""
+line_w=0
+
+for seg in "${segments[@]}"; do
+    seg_w=$(visible_len "$seg")
+    needed=$seg_w
+    [ "$line_w" -gt 0 ] && needed=$(( seg_w + sep_visible_w ))
+
+    if [ "$line_w" -gt 0 ] && [ $(( line_w + needed )) -gt "$COLUMNS" ]; then
+        # Wrap to next line
+        out+="\n"
+        line_w=0
+        needed=$seg_w
+    fi
+
+    if [ "$line_w" -gt 0 ]; then
+        out+="$sep_str"
+        line_w=$(( line_w + sep_visible_w ))
+    fi
+
+    out+="$seg"
+    line_w=$(( line_w + seg_w ))
+done
 
 printf "%b" "$out"
