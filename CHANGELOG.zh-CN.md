@@ -1,5 +1,13 @@
 # 更新日志
 
+## [2.3.1] - 2026-04-12
+
+### 错误修复
+- **Windows 远程安装崩溃**：修复 PowerShell 5.x 中通过 `irm URL | iex` 安装时报 `ParameterBindingException` 的问题。内部令牌（如 `"adversarial-review"`）泄漏到 `$args` 并作为位置参数传给 `Invoke-Expression`。现在通过过滤 `$args`，仅传递以 `-` 开头的 switch 参数。
+
+### 设计理由
+- `$_safeArgs` 过滤器替代原始 `@args` splatting——本地 `.\install.ps1 -All` 仍然正常工作，同时防止 `irm | iex` 管道模式下的垃圾令牌泄漏。
+
 ## [2.3.0] - 2026-04-10
 
 ### 新特性

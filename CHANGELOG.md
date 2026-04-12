@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.3.1] - 2026-04-12
+
+### Bug Fixes
+- **Windows remote install crash**: Fixed `ParameterBindingException` when running `irm URL | iex` on PowerShell 5.x. Internal tokens like `"adversarial-review"` leaked into `$args` and were splatted as positional arguments to `Invoke-Expression`. Now filters `$args` to only pass recognized switch-style arguments (starting with `-`).
+
+### Design Rationale
+- `$_safeArgs` filter replaces raw `@args` splatting — keeps `.\install.ps1 -All` working locally while preventing garbage token leakage in `irm | iex` piped mode.
+
 ## [2.3.0] - 2026-04-10
 
 ### Features
