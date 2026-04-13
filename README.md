@@ -316,6 +316,7 @@ These two options are mutually exclusive. The installer dynamically configures C
 - [**OpenAI Engineering**](https://openai.com/news/engineering/) by OpenAI — Engineering blog sharing technical insights on building and scaling AI systems
 - [**Claude Code Best Practice**](https://github.com/shanraisshan/claude-code-best-practice) by shanraisshan — Comprehensive best practices, workflows, and implementation patterns for Claude Code
 - [**Claude How To**](https://github.com/luongnv89/claude-howto) by luongnv89 — Example-driven guide to mastering Claude Code through progressive tutorials with copy-paste templates
+- [CCHub](https://github.com/Moresl/cchub) - A desktop control panel for the Claude Code / Codex / Gemini CLI ecosystem. Manage MCP servers, config profiles, agent skills, CLAUDE.md, hooks, and workflow templates from a single Tauri app (Windows / macOS / Linux).
 
 ## License
 
