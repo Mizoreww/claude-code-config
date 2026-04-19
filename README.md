@@ -307,6 +307,9 @@ These two options are mutually exclusive. The installer dynamically configures C
 - **Add a skill**: Place in `skills/<name>/SKILL.md`
 - **Adapt CLAUDE.md**: Customize for your shell, package manager, and project context
 
+- [Agent Shadow Brain](https://github.com/theihtisham/agent-shadow-brain) - Self-evolving AI coding intelligence with infinite memory (TurboQuant), genetic algorithm self-evolution, predictive bug detection, PageRank knowledge graphs, swarm intelligence, and adversarial defense. TypeScript/Node.js. MIT.
+- [Omni Skills Forge](https://github.com/theihtisham/omni-skills-forge) - 50,000+ curated AI agent skills for Claude Code, Cursor, Copilot, Windsurf, Cline. Visual dashboard, one-click install, skill doctor, auto-update. TypeScript/Node.js. MIT.
+
 ## Acknowledgements
 
 - [**Claude Code in Action**](https://anthropic.skilljar.com/claude-code-in-action) by Anthropic Academy — Official course covering Claude Code integration, MCP servers, GitHub automation, and dev workflows
