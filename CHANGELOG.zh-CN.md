@@ -1,5 +1,15 @@
 # 更新日志
 
+## [2.5.1] - 2026-04-21
+
+### 错误修复
+- **`effortLevel` 默认值由 `max` 改为 `xhigh`**：`max` 不能作为持久默认值——Claude Code 的 `settings.json` 中 `effortLevel` 字段（以及环境变量 `CLAUDE_CODE_EFFORT_LEVEL`）仅接受 `low` / `medium` / `high` / `xhigh`。`max` 档位被官方刻意设计为会话级，只能通过 `/effort max` 每次会话手动开启。此前默认的 `max` 会被静默忽略。
+- **移除 `betas: ["extended-cache-ttl-2025-04-11"]`**：1 小时提示缓存 TTL 已正式发布（GA），该 beta header 已不再需要。保留过期的 beta ID 只是无效配置。
+
+### 注意事项
+- 如需 `max` 推理强度，请每次会话手动执行 `/effort max`——这是 Anthropic 对最高档位的刻意设计。
+- 移除 beta header 后，1h 缓存 TTL 仍原生支持。
+
 ## [2.5.0] - 2026-04-21
 
 ### 新特性

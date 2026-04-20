@@ -1,5 +1,15 @@
 # Changelog
 
+## [2.5.1] - 2026-04-21
+
+### Bug Fixes
+- **`effortLevel` default changed from `max` to `xhigh`**: `max` is not accepted as a persistent default — Claude Code only allows `low`/`medium`/`high`/`xhigh` for `effortLevel` in `settings.json` (and for `CLAUDE_CODE_EFFORT_LEVEL`). The `max` tier is intentionally session-scoped and must be set per session via `/effort max`. The previous default was silently ignored.
+- **Removed `betas: ["extended-cache-ttl-2025-04-11"]`**: the 1-hour prompt cache TTL is now generally available, so the beta header is no longer required. The expired beta ID was dead configuration.
+
+### Notes & Caveats
+- If you want `max` reasoning effort, invoke `/effort max` per session — this is Anthropic's deliberate design for the top tier.
+- 1h cache TTL continues to work natively after removing the beta header.
+
 ## [2.5.0] - 2026-04-21
 
 ### Features
