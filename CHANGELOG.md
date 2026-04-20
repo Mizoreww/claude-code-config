@@ -1,5 +1,14 @@
 # Changelog
 
+## [2.5.2] - 2026-04-21
+
+### Refactor
+- **Swap `env.CLAUDE_CODE_NO_FLICKER` for top-level `"tui": "fullscreen"`**: the `tui` setting is the schema-native way to select the flicker-free alt-screen renderer. Per the official schema it is "equivalent to `CLAUDE_CODE_NO_FLICKER=1`". Using the schema field is more discoverable, validates against settings.json's JSON Schema, and keeps `env` reserved for variables that have no native setting.
+
+### Notes & Caveats
+- Behaviour is identical — same fullscreen renderer, same virtualized scrollback.
+- `env` still carries `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` and `CLAUDE_CODE_DISABLE_ADAPTIVE_THINKING` because neither has a schema-native equivalent (`alwaysThinkingEnabled: false` disables thinking entirely, which is not what we want).
+
 ## [2.5.1] - 2026-04-21
 
 ### Bug Fixes

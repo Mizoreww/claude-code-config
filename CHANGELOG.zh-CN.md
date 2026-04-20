@@ -1,5 +1,14 @@
 # 更新日志
 
+## [2.5.2] - 2026-04-21
+
+### 重构
+- **将 `env.CLAUDE_CODE_NO_FLICKER` 替换为顶层 `"tui": "fullscreen"`**：`tui` 是官方 schema 为"无闪烁全屏渲染"提供的原生字段。Schema 明确说明 `tui: "fullscreen"` "equivalent to `CLAUDE_CODE_NO_FLICKER=1`"。使用 schema 字段在配置上更规范、可被 JSON Schema 校验，并让 `env` 只保留没有原生字段对应的环境变量。
+
+### 注意事项
+- 行为完全一致——同样的全屏渲染器、同样的虚拟滚动缓冲。
+- `env` 仍保留 `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` 和 `CLAUDE_CODE_DISABLE_ADAPTIVE_THINKING`，因为二者目前没有原生 schema 字段对应（`alwaysThinkingEnabled: false` 会完全禁用 thinking，语义不同）。
+
 ## [2.5.1] - 2026-04-21
 
 ### 错误修复
