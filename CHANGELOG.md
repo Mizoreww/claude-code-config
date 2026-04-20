@@ -1,5 +1,23 @@
 # Changelog
 
+## [2.4.0] - 2026-04-21
+
+### Features
+- **Default permission mode `auto`**: `settings.json` ships with `permissions.defaultMode = "auto"` so Claude autonomously approves safe actions and blocks risky ones. Installer auto-detects Claude Code version and downgrades to `bypassPermissions` on versions older than 2.1.80 (existing logic, unchanged).
+- **Max reasoning effort default**: `effortLevel: "max"` at the top level of `settings.json`. Pins `/effort` to the highest tier by default; fall back to `xhigh` / `high` automatically on older CLIs that reject `max`.
+- **1-hour prompt cache TTL**: `betas: ["extended-cache-ttl-2025-04-11"]` enables extended prompt caching (1h) instead of the default 5-minute TTL, reducing cache churn on long sessions.
+- **Flicker-free rendering**: `env.CLAUDE_CODE_NO_FLICKER = "1"` switches to fullscreen rendering mode (equivalent to `/tui fullscreen`).
+- **Adaptive thinking disabled by default**: `env.CLAUDE_CODE_DISABLE_ADAPTIVE_THINKING = "1"` pins thinking budget to `MAX_THINKING_TOKENS` instead of adapting per-turn. No effect on Opus 4.7 (always adaptive).
+
+### Design Rationale
+- Keeping these as a single "one knob on" default set simplifies onboarding — users who want the stock behaviour change one value; users who don't care get the fast path.
+- Unknown keys (`effortLevel`, `betas`) are silently ignored by older Claude Code versions, so no version gating needed in the installer.
+- `auto` mode is the only default that genuinely needs fallback; the existing `_supports_auto_mode` check in `install.sh` handles that.
+
+### Notes & Caveats
+- `CLAUDE_CODE_DISABLE_ADAPTIVE_THINKING` and `CLAUDE_CODE_NO_FLICKER` are recognised by Claude Code 2.1.104+. On earlier versions they are harmless no-ops.
+- Adaptive thinking is always on for Opus 4.7 regardless of the env var — change `model` if you need strict fixed-budget behaviour.
+
 ## [2.3.1] - 2026-04-12
 
 ### Bug Fixes

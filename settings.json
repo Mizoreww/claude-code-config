@@ -1,8 +1,12 @@
 {
   "env": {
-    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
+    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1",
+    "CLAUDE_CODE_NO_FLICKER": "1",
+    "CLAUDE_CODE_DISABLE_ADAPTIVE_THINKING": "1"
   },
   "model": "opus",
+  "effortLevel": "max",
+  "betas": ["extended-cache-ttl-2025-04-11"],
   "enabledPlugins": {
     "document-skills@anthropic-agent-skills": true,
     "example-skills@anthropic-agent-skills": true,
@@ -55,7 +59,7 @@
   },
   "skipDangerousModePermissionPrompt": true,
   "permissions": {
-    "defaultMode": "bypassPermissions",
+    "defaultMode": "auto",
     "allow": [
       "Bash(*)",
       "Read(*)",

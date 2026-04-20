@@ -297,9 +297,19 @@ CLAUDE.md includes a **Code Review** rule: whenever a code review is needed — 
 
 These two options are mutually exclusive. The installer dynamically configures CLAUDE.md based on your selection, including fallback behavior.
 
-## Security Note
+## Defaults Shipped in `settings.json`
 
-`settings.json` now ships with `auto` mode (requires Claude Code >= 2.1.80, [announced 2026-03-24](https://docs.anthropic.com/en/docs/claude-code)). Auto mode lets Claude approve safe actions autonomously while blocking risky ones — a safer alternative to `bypassPermissions`. The installer auto-detects your Claude Code version and falls back to `bypassPermissions` for older versions. To use a different mode, change `defaultMode` in `settings.json` to `"default"`, `"acceptEdits"`, or `"bypassPermissions"`.
+`settings.json` opts into a set of high-performance defaults. Unknown keys are silently ignored on older Claude Code versions, so no version gating is needed except for `auto` mode (handled by the installer).
+
+| Setting | Value | Effect |
+|---------|-------|--------|
+| `permissions.defaultMode` | `"auto"` | Claude autonomously approves safe actions and blocks risky ones. Requires Claude Code ≥ 2.1.80; installer auto-downgrades to `bypassPermissions` on older CLIs. |
+| `effortLevel` | `"max"` | Pins `/effort` to the highest reasoning tier by default. Older CLIs that don't recognise `max` fall back to the highest tier they support. |
+| `betas` | `["extended-cache-ttl-2025-04-11"]` | Enables the 1-hour prompt-cache TTL beta instead of the default 5-minute TTL. |
+| `env.CLAUDE_CODE_NO_FLICKER` | `"1"` | Switches Claude Code to fullscreen rendering (equivalent to `/tui fullscreen`). |
+| `env.CLAUDE_CODE_DISABLE_ADAPTIVE_THINKING` | `"1"` | Pins thinking budget to `MAX_THINKING_TOKENS` instead of adapting per-turn. No effect on Opus 4.7 (always adaptive). |
+
+To use different values, edit `settings.json` directly — for example, change `defaultMode` to `"default"`, `"acceptEdits"`, or `"bypassPermissions"`, or drop `effortLevel` if you prefer to steer `/effort` manually per session.
 
 ## Customization
 

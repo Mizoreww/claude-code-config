@@ -1,5 +1,23 @@
 # 更新日志
 
+## [2.4.0] - 2026-04-21
+
+### 新特性
+- **默认权限模式 `auto`**：`settings.json` 默认使用 `permissions.defaultMode = "auto"`，让 Claude 自动批准安全操作、拦截高风险操作。安装器自动检测 Claude Code 版本，低于 2.1.80 时自动降级为 `bypassPermissions`（原有逻辑，保持不变）。
+- **最大推理强度**：在 `settings.json` 顶层新增 `effortLevel: "max"`，让 `/effort` 默认固定在最高档。旧版 CLI 不识别 `max` 时会自动回退到 `xhigh` / `high`。
+- **1 小时提示缓存 TTL**：`betas: ["extended-cache-ttl-2025-04-11"]` 启用扩展提示缓存（1 小时），替代默认的 5 分钟 TTL，显著降低长会话的缓存 churn。
+- **无闪烁渲染**：`env.CLAUDE_CODE_NO_FLICKER = "1"` 切换到全屏渲染模式（等价于 `/tui fullscreen`）。
+- **默认关闭 adaptive thinking**：`env.CLAUDE_CODE_DISABLE_ADAPTIVE_THINKING = "1"` 把思考预算固定到 `MAX_THINKING_TOKENS`，不再按轮自适应。Opus 4.7 不受此开关影响（始终自适应）。
+
+### 设计理由
+- 把这些"一键开启"的默认集中到一处，简化上手——想要原版行为的用户只需改一行，其余人直接享受高配。
+- 未知键（`effortLevel`、`betas`）在旧版 Claude Code 中会被静默忽略，因此无需为它们写版本门控。
+- 只有 `auto` 模式真正需要降级，`install.sh` 中已有的 `_supports_auto_mode` 检测足够。
+
+### 注意事项
+- `CLAUDE_CODE_DISABLE_ADAPTIVE_THINKING` 和 `CLAUDE_CODE_NO_FLICKER` 需要 Claude Code 2.1.104+。在更早的版本中是无害的空操作。
+- Opus 4.7 始终开启 adaptive thinking，不受该开关控制——如需严格固定预算，请切换到其他模型。
+
 ## [2.3.1] - 2026-04-12
 
 ### 错误修复
