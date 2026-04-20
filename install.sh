@@ -320,7 +320,7 @@ DEEPXIV_KNOWN_SKILLS=("deepxiv-cli" "deepxiv-trending-digest" "deepxiv-baseline-
 # --- Plugin groups ------------------------------------------------------
 
 PLUGINS_ESSENTIAL=(
-    "everything-claude-code@everything-claude-code"
+    "andrej-karpathy-skills@karpathy-skills"
     "superpowers@claude-plugins-official"
     "context7@claude-plugins-official"
     "commit-commands@claude-plugins-official"
@@ -332,6 +332,10 @@ PLUGINS_ESSENTIAL=(
     "frontend-design@claude-plugins-official"
     "example-skills@anthropic-agent-skills"
     "github@claude-plugins-official"
+)
+
+PLUGINS_OPTIONAL=(
+    "everything-claude-code@everything-claude-code"
 )
 
 PLUGINS_CLAUDE_MEM=(
@@ -474,41 +478,46 @@ Go rules|gofmt, table-driven tests, gosec|0|rules-go")
 adversarial-review|Cross-model adversarial review (poteto/noodle)|1|review-adversarial
 Codex CLI|Codex adversarial review (openai/codex)|0|review-codex")
 
-    # Group 3: Skills
-    GROUP_LABELS+=("Skills")
-    GROUP_HINTS+=("")
-    GROUP_ITEMS+=("paper-reading|Research paper summarization|1|skill-paper-reading
-humanizer|Remove AI writing patterns (English, blader)|1|skill-humanizer
-humanizer-zh|Remove AI writing patterns (Chinese, op7418)|0|skill-humanizer-zh
-update-config|Configure Claude Code via settings.json|1|skill-update-config")
-
-    # Group 4: Plugins — Official
-    GROUP_LABELS+=("Plugins — Official")
-    GROUP_HINTS+=("")
-    GROUP_ITEMS+=("everything-claude-code|TDD, security, database, Go/Python/Spring Boot|1|plug-everything-claude-code
+    # Group 3: Workflow
+    GROUP_LABELS+=("Workflow")
+    GROUP_HINTS+=("planning, iteration, code quality, meta-config")
+    GROUP_ITEMS+=("andrej-karpathy-skills|Karpathy coding guidelines (Think-First, Simplicity, Surgical)|1|plug-andrej-karpathy-skills
 superpowers|Planning, brainstorming, TDD, debugging|1|plug-superpowers
-context7|Real-time library documentation|1|plug-context7
-commit-commands|git commit / push / PR workflow|1|plug-commit-commands
-document-skills|Document processing (PDF, DOCX, PPTX, XLSX)|1|plug-document-skills
-playwright|Browser automation & E2E testing|1|plug-playwright
 feature-dev|Guided feature development|1|plug-feature-dev
-code-simplifier|Code simplification & cleanup|1|plug-code-simplifier
 ralph-loop|Automated iteration loop|1|plug-ralph-loop
-frontend-design|Frontend UI design|1|plug-frontend-design
-example-skills|Example skills collection|1|plug-example-skills
-github|GitHub integration|1|plug-github")
+commit-commands|git commit / push / PR workflow|1|plug-commit-commands
+code-simplifier|Code simplification & cleanup|1|plug-code-simplifier
+everything-claude-code|TDD, security, database, Go/Python/Spring Boot|0|plug-everything-claude-code
+update-config|Configure Claude Code via settings.json (skill)|1|skill-update-config")
 
-    # Group 5: Plugins — Community
-    GROUP_LABELS+=("Plugins — Community")
-    GROUP_HINTS+=("")
+    # Group 4: Integrations
+    GROUP_LABELS+=("Integrations")
+    GROUP_HINTS+=("external tools & services")
+    GROUP_ITEMS+=("context7|Real-time library documentation|1|plug-context7
+github|GitHub integration (issues, PRs, workflows)|1|plug-github
+playwright|Browser automation & E2E testing|1|plug-playwright")
+
+    # Group 5: Design & Content
+    GROUP_LABELS+=("Design & Content")
+    GROUP_HINTS+=("documents, UI, creative artifacts, humanization")
+    GROUP_ITEMS+=("document-skills|Document processing (PDF, DOCX, PPTX, XLSX)|1|plug-document-skills
+example-skills|Frontend/design/canvas/algorithmic-art skills|1|plug-example-skills
+frontend-design|Frontend UI design|1|plug-frontend-design
+humanizer|Remove AI writing patterns (English, blader) (skill)|1|skill-humanizer
+humanizer-zh|Remove AI writing patterns (Chinese, op7418) (skill)|0|skill-humanizer-zh")
+
+    # Group 6: Memory & Lifestyle
+    GROUP_LABELS+=("Memory & Lifestyle")
+    GROUP_HINTS+=("session memory and personal productivity")
     GROUP_ITEMS+=("claude-mem|Cross-session memory (~3k tokens/session)|0|plug-claude-mem
 claude-health|Health check & wellness dashboard|0|plug-claude-health
 PUA|AI agent productivity booster (pua, pua-en, pua-ja)|0|plug-pua")
 
-    # Group 6: Academic Research (AI Research plugins + DeepXiv skills)
+    # Group 7: Academic Research (AI Research plugins + DeepXiv skills + paper-reading)
     GROUP_LABELS+=("Academic Research")
-    GROUP_HINTS+=("plugins + DeepXiv skills from github.com/DeepXiv/deepxiv_sdk")
-    GROUP_ITEMS+=("tokenization|Tokenizer training & usage|0|plug-tokenization
+    GROUP_HINTS+=("training/inference plugins + paper-reading & DeepXiv skills")
+    GROUP_ITEMS+=("paper-reading|Research paper summarization (skill)|1|skill-paper-reading
+tokenization|Tokenizer training & usage|0|plug-tokenization
 fine-tuning|Model fine-tuning|0|plug-fine-tuning
 post-training|Post-training (RLHF, DPO, GRPO)|0|plug-post-training
 inference-serving|Inference serving (vLLM, SGLang, TensorRT)|0|plug-inference-serving
@@ -518,7 +527,7 @@ deepxiv-cli|arXiv/PMC paper search & reading CLI skill|0|deepxiv-cli
 deepxiv-trending-digest|Trending paper digest generation|0|deepxiv-trending-digest
 deepxiv-baseline-table|Baseline comparison table from papers|0|deepxiv-baseline-table")
 
-    # Group 7: MCP Servers
+    # Group 8: MCP Servers
     GROUP_LABELS+=("MCP Servers")
     GROUP_HINTS+=("")
     GROUP_ITEMS+=("Lark MCP server|Feishu/Lark integration|0|mcp")
@@ -871,6 +880,7 @@ deepxiv-baseline-table|Baseline comparison table from papers|0|deepxiv-baseline-
     # Helper: map plug-* ID to package name (bash 3.2 compatible, no associative arrays)
     _plug_id_to_pkg() {
         case "$1" in
+            plug-andrej-karpathy-skills) echo "andrej-karpathy-skills@karpathy-skills" ;;
             plug-everything-claude-code) echo "everything-claude-code@everything-claude-code" ;;
             plug-superpowers)       echo "superpowers@claude-plugins-official" ;;
             plug-context7)          echo "context7@claude-plugins-official" ;;
@@ -997,6 +1007,44 @@ install_claude_md() {
     fi
 }
 
+# Emit a JSON array of effective selected plugin packages (name@marketplace).
+# Combines SELECTED_PLUGINS (individual picks) with PLUGIN_GROUPS expansion.
+_effective_selected_plugins_json() {
+    local pkgs=()
+    if [[ ${#SELECTED_PLUGINS[@]} -gt 0 ]]; then
+        pkgs+=("${SELECTED_PLUGINS[@]}")
+    fi
+    if [[ ${#PLUGIN_GROUPS[@]} -gt 0 ]]; then
+        local g
+        for g in "${PLUGIN_GROUPS[@]}"; do
+            case "$g" in
+                essential|core) pkgs+=("${PLUGINS_ESSENTIAL[@]}") ;;
+                claude-mem)     pkgs+=("${PLUGINS_CLAUDE_MEM[@]}") ;;
+                ai-research)    pkgs+=("${PLUGINS_AI_RESEARCH[@]}") ;;
+                health)         pkgs+=("${PLUGINS_HEALTH[@]}") ;;
+                pua)            pkgs+=("${PLUGINS_PUA[@]}") ;;
+                all)            pkgs+=("${PLUGINS_ESSENTIAL[@]}" "${PLUGINS_OPTIONAL[@]}" "${PLUGINS_CLAUDE_MEM[@]}" "${PLUGINS_AI_RESEARCH[@]}" "${PLUGINS_HEALTH[@]}" "${PLUGINS_PUA[@]}") ;;
+            esac
+        done
+    fi
+    if [[ ${#pkgs[@]} -eq 0 ]]; then
+        echo "[]"
+        return
+    fi
+    if command -v jq &>/dev/null; then
+        printf '%s\n' "${pkgs[@]}" | jq -R . | jq -cs 'unique'
+    else
+        local out="[" sep="" p
+        for p in "${pkgs[@]}"; do
+            local esc="${p//\\/\\\\}"; esc="${esc//\"/\\\"}"
+            out+="${sep}\"${esc}\""
+            sep=","
+        done
+        out+="]"
+        echo "$out"
+    fi
+}
+
 _supports_auto_mode() {
     # Auto mode requires Claude Code >= 2.1.80 (shipped 2026-03-24)
     local ver
@@ -1010,6 +1058,11 @@ _supports_auto_mode() {
 
 install_settings() {
     info "Installing settings.json..."
+
+    # Hoist jq install — both the merge branch and the fresh-install selection filter
+    # need it. Without this, fresh installs on jq-less machines silently skipped
+    # the plugin filter (bug_003) when statusline+lessons were both kept default-on.
+    install_jq || true
 
     # Auto mode detection: downgrade to bypassPermissions if Claude Code is too old
     local USE_AUTO_MODE=true
@@ -1029,7 +1082,6 @@ install_settings() {
             $INSTALL_LESSONS    || info "  - hooks.SessionStart: skipped (not selected)"
         else
             if ! $INSTALL_STATUSLINE || ! $INSTALL_LESSONS; then
-                install_jq || true
                 if command -v jq &>/dev/null; then
                     local filter="."
                     $INSTALL_STATUSLINE || filter="$filter | del(.statusLine)"
@@ -1053,13 +1105,23 @@ install_settings() {
                     sed 's/"defaultMode": "auto"/"defaultMode": "bypassPermissions"/' "$CLAUDE_DIR/settings.json" > "$sedtmp" && mv "$sedtmp" "$CLAUDE_DIR/settings.json"
                 fi
             fi
+            # Apply enabledPlugins selection filter. Catalogue = source keys ∪ selection,
+            # so plugins picked in the menu that aren't declared in the shipped
+            # settings.json (codex, health, pua) still land as true.
+            if $INSTALL_PLUGINS && command -v jq &>/dev/null && [[ -f "$CLAUDE_DIR/settings.json" ]]; then
+                local sel_json; sel_json="$(_effective_selected_plugins_json)"
+                local tmp; tmp="$(jq --argjson selected "$sel_json" '
+                    ($selected | reduce .[] as $p ({}; .[$p] = true)) as $sel |
+                    .enabledPlugins = (((.enabledPlugins // {}) + $sel) | to_entries | map({key, value: ($sel[.key] // false)}) | from_entries)
+                ' "$CLAUDE_DIR/settings.json")"
+                echo "$tmp" > "$CLAUDE_DIR/settings.json"
+            fi
             ok "settings.json installed (new)"
         fi
         return
     fi
 
-    # File exists: smart merge with jq if available
-    install_jq || true
+    # File exists: smart merge with jq if available (jq was hoisted at function start)
     if ! command -v jq &>/dev/null; then
         warn "settings.json already exists and jq is not installed"
         warn "  Cannot perform smart merge. Please merge manually:"
@@ -1073,7 +1135,11 @@ install_settings() {
         info "Would smart-merge settings.json (jq available)"
         info "  - env: incoming as defaults, existing overrides"
         info "  - permissions.allow: union of arrays"
-        info "  - enabledPlugins: union (new plugins added, existing preserved)"
+        if $INSTALL_PLUGINS; then
+            info "  - enabledPlugins: selection-aware rebuild (unselected known plugins disabled, unknown plugins preserved)"
+        else
+            info "  - enabledPlugins: union (existing preserved on conflict)"
+        fi
         if $INSTALL_LESSONS; then
             info "  - hooks.SessionStart: deduplicated by matcher"
         else
@@ -1096,7 +1162,15 @@ install_settings() {
     $INSTALL_STATUSLINE && inc_sl=true
     $INSTALL_LESSONS && inc_lh=true
 
-    jq -s --argjson inc_sl "$inc_sl" --argjson inc_lh "$inc_lh" '
+    # Build JSON array of effective selected plugin packages. When plugins were
+    # interacted with this run, unselected-but-locally-present plugins are disabled.
+    local selected_json
+    selected_json="$(_effective_selected_plugins_json)"
+    local apply_sel=false
+    $INSTALL_PLUGINS && apply_sel=true
+
+    jq -s --argjson inc_sl "$inc_sl" --argjson inc_lh "$inc_lh" \
+          --argjson selected "$selected_json" --argjson apply_sel "$apply_sel" '
     def unique_array: [.[] | tostring] | unique | [.[] | fromjson? // .];
 
     # $base = incoming (defaults), $over = existing (user overrides)
@@ -1108,8 +1182,31 @@ install_settings() {
     # permissions.allow: union
     (($base.permissions.allow // []) + ($over.permissions.allow // []) | unique) as $allow |
 
-    # enabledPlugins: union (new plugins added, existing preserved)
-    (($over.enabledPlugins // {}) * ($base.enabledPlugins // {})) as $plugins |
+    # enabledPlugins:
+    # When $apply_sel is true, apply the selection filter ONLY to keys the installer
+    # knows about (keys of $base.enabledPlugins) — those become true iff in $selected,
+    # else false. Keys that exist only in $over (user-added plugins outside our
+    # catalogue) are preserved verbatim so the installer never silently disables
+    # third-party plugins.
+    # When $apply_sel is false, fall back to union (existing wins on conflict).
+    (($selected | reduce .[] as $p ({}; .[$p] = true))) as $sel |
+    (if $apply_sel then
+       (
+         # Known catalogue = $base keys + $sel keys (so plugins picked in the menu
+         # that are not declared in the shipped settings.json — e.g. codex, health,
+         # pua — still land in enabledPlugins as true).
+         (($base.enabledPlugins // {}) + $sel) as $catalogue |
+         ($catalogue | to_entries
+           | map({key, value: ($sel[.key] // false)}) | from_entries) as $known_map |
+         (($catalogue | keys)) as $known_keys |
+         (($over.enabledPlugins // {})
+           | with_entries(select(.key as $k | ($known_keys | index($k)) | not))) as $over_only |
+         ($known_map + $over_only)
+       )
+     else
+       # Fallback union: existing ($over) wins on conflict per the documented promise.
+       (($base.enabledPlugins // {}) * ($over.enabledPlugins // {}))
+     end) as $plugins |
 
     # hooks.SessionStart: deduplicate by matcher (only merge incoming if lessons selected)
     (if $inc_lh then
@@ -1430,7 +1527,7 @@ install_plugins() {
                     plugins+=("${PLUGINS_PUA[@]}")
                     ;;
                 all)
-                    plugins+=("${PLUGINS_ESSENTIAL[@]}" "${PLUGINS_CLAUDE_MEM[@]}" "${PLUGINS_AI_RESEARCH[@]}" "${PLUGINS_HEALTH[@]}" "${PLUGINS_PUA[@]}")
+                    plugins+=("${PLUGINS_ESSENTIAL[@]}" "${PLUGINS_OPTIONAL[@]}" "${PLUGINS_CLAUDE_MEM[@]}" "${PLUGINS_AI_RESEARCH[@]}" "${PLUGINS_HEALTH[@]}" "${PLUGINS_PUA[@]}")
                     ;;
             esac
         done
@@ -1457,6 +1554,7 @@ install_plugins() {
         "claude-health|tw93/claude-health"
         "pua-skills|tanweai/pua"
         "openai-codex|openai/codex-plugin-cc"
+        "karpathy-skills|forrestchang/andrej-karpathy-skills"
     )
 
     # Build set of needed marketplaces (bash 3.2 compatible, no associative arrays)
@@ -1594,7 +1692,7 @@ uninstall() {
     fi
 
     if command -v claude &>/dev/null; then
-        local all_plugins=("${PLUGINS_ESSENTIAL[@]}" "${PLUGINS_CLAUDE_MEM[@]}" "${PLUGINS_AI_RESEARCH[@]}" "${PLUGINS_HEALTH[@]}" "${PLUGINS_PUA[@]}")
+        local all_plugins=("${PLUGINS_ESSENTIAL[@]}" "${PLUGINS_OPTIONAL[@]}" "${PLUGINS_CLAUDE_MEM[@]}" "${PLUGINS_AI_RESEARCH[@]}" "${PLUGINS_HEALTH[@]}" "${PLUGINS_PUA[@]}")
         for entry in "${all_plugins[@]}"; do
             local plugin_name="${entry%%@*}"
             claude plugin uninstall "$entry" 2>/dev/null && \

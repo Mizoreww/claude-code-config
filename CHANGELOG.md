@@ -1,5 +1,39 @@
 # Changelog
 
+## [2.5.0] - 2026-04-21
+
+### Features
+- **New plugin: `andrej-karpathy-skills`** (marketplace `karpathy-skills` at `forrestchang/andrej-karpathy-skills`) enabled by default. Adds Karpathy-inspired behavioural guidelines (Think-Before-Coding, Simplicity-First, Surgical Changes, Goal-Driven Execution) to reduce common LLM coding mistakes.
+- **`everything-claude-code` now default disabled**. Moved out of the essential plugin group into an optional group; only installed via explicit `--all` or manual opt-in.
+- **Installer respects plugin de-selection**: when running the installer, any plugin that the user did NOT select but that already exists in their local `settings.json` (or is known to the installer catalogue) is now written as `false` in `enabledPlugins`. Previously, unselected plugins could silently remain enabled because the merge logic preferred existing values.
+- **Menu reorganisation**: the "Plugins — Official" and "Plugins — Community" groups have been replaced with four usage-oriented groups and the old "Skills" group has been dissolved into them. Plugins and skills now live side-by-side in the same category, since they serve the same workflow:
+  - **Workflow** (8): andrej-karpathy-skills, superpowers, feature-dev, ralph-loop, commit-commands, code-simplifier, everything-claude-code, `update-config` (skill)
+  - **Integrations** (3): context7, github, playwright
+  - **Design & Content** (5): document-skills, example-skills, frontend-design, `humanizer` (skill), `humanizer-zh` (skill)
+  - **Memory & Lifestyle** (3): claude-mem, claude-health, PUA
+  - **Academic Research** (10): `paper-reading` (skill) + 6 AI-Research plugins + 3 DeepXiv skills (previously 9)
+  Group labels no longer carry the redundant "Plugins —" prefix.
+
+### Design Rationale
+- Karpathy's guidelines are general-purpose heuristics that apply to most coding sessions, so they belong in the essentials group. Everything-claude-code is broad and opinionated; making it opt-in reduces surprise overlap with user-selected standards.
+- The new enabledPlugins rule makes the interactive menu authoritative: what you pick is what's enabled. Unknown keys from the existing settings.json that are not in our catalogue are still preserved so manually-added plugins aren't clobbered.
+
+### Bug Fixes (post-review)
+- **`enabledPlugins` catalogue now includes the current selection**. Previously, plugins selected in the menu but not declared in the shipped `settings.json` (e.g. `codex@openai-codex`, `health@claude-health`, `pua@pua-skills`) were installed by `claude plugin install` but silently omitted from `enabledPlugins` — Claude Code treated them as disabled. The selection-aware rebuild now unions base keys with `$selected`.
+- **Fallback merge order corrected**. When plugins aren't interacted with this run, the union merge now has existing values winning on conflict (`$base * $over` in jq, `$mergeHt $incoming $existing` in PowerShell). Previously the operands were swapped, silently flipping v2.4.x users' `everything-claude-code: true` to `false` on any upgrade that didn't touch plugins.
+- **`install_jq` hoisted in `install_settings`**. Fresh installs on jq-less machines with statusline+lessons both on no longer silently skip the plugin selection filter.
+- **Dry-run banner now reflects actual semantics**. Previously `--dry-run` printed "enabledPlugins: union (new plugins added, existing preserved)" even when the real run would do a selection-aware rebuild — now branches on `$INSTALL_PLUGINS`.
+
+### Windows Menu Parity
+- Install.ps1 now accepts **→ (Right arrow)** to open a group's sub-menu and **← (Left arrow)** to return, matching install.sh. Hint strings updated in both scripts.
+- README documents the full key bindings: main menu (↑↓ / Enter or → / q), sub-menu (↑↓ / Space / ← or Esc), and shortcuts (a / n / d).
+
+### Notes & Caveats
+- `PLUGINS_OPTIONAL` group added alongside `PLUGINS_ESSENTIAL` (install.sh and install.ps1). `--all` mode expands to include both.
+- The selection-aware enabledPlugins merge only activates when the installer touches plugins (`INSTALL_PLUGINS=true`). If you install only `settings.json` without any plugin selection, the fallback union merge preserves existing state.
+- Existing users: your previously-enabled plugins stay enabled only if re-selected in the menu. Run the interactive menu to adjust.
+- README.md and README.zh-CN.md significantly trimmed (from 349 → ~195 lines): the per-plugin duplication that overlapped with `plugins/README.md` has been collapsed, while the full interactive-menu catalogue is kept inline with links and defaults.
+
 ## [2.4.0] - 2026-04-21
 
 ### Features

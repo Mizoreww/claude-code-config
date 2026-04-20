@@ -1,13 +1,14 @@
 # Plugins
 
-23 plugins across 8 marketplaces + 3 DeepXiv academic research skills (fetched from GitHub at install time). Context7, GitHub, Playwright migrated from MCP to official plugins.
+24 plugins across 9 marketplaces + 3 DeepXiv academic research skills (fetched from GitHub at install time). Context7, GitHub, Playwright migrated from MCP to official plugins.
 
 ## Plugin List
 
 | Plugin | Marketplace | What It Does |
 |--------|-------------|--------------|
 | [**superpowers**](https://github.com/obra/superpowers) | claude-plugins-official | Brainstorming, debugging, code review, git worktrees, plan writing |
-| [**everything-claude-code**](https://github.com/affaan-m/everything-claude-code) | everything-claude-code | TDD, security review, database patterns, Go/Python/Spring Boot |
+| [**andrej-karpathy-skills**](https://github.com/forrestchang/andrej-karpathy-skills) | karpathy-skills | Karpathy coding guidelines: Think-First, Simplicity, Surgical Changes, Goal-Driven |
+| [**everything-claude-code**](https://github.com/affaan-m/everything-claude-code) | everything-claude-code | TDD, security review, database patterns, Go/Python/Spring Boot (default off) |
 | [**document-skills**](https://github.com/anthropics/skills) | anthropic-agent-skills | PDF, DOCX, PPTX, XLSX creation and manipulation |
 | [**example-skills**](https://github.com/anthropics/skills) | anthropic-agent-skills | Frontend design, MCP builder, canvas design, algorithmic art |
 | [**claude-mem**](https://github.com/thedotmack/claude-mem) | thedotmack | Persistent memory with smart search, timeline, AST-aware code search |
@@ -54,6 +55,7 @@ claude plugin marketplace add https://github.com/affaan-m/everything-claude-code
 claude plugin marketplace add https://github.com/thedotmack/claude-mem
 claude plugin marketplace add https://github.com/zechenzhangAGI/AI-research-SKILLs
 claude plugin marketplace add https://github.com/openai/codex-plugin-cc
+claude plugin marketplace add https://github.com/forrestchang/andrej-karpathy-skills
 
 # Install plugins (name@marketplace)
 claude plugin install superpowers@claude-plugins-official

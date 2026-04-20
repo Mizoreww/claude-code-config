@@ -165,7 +165,7 @@ function Confirm-Action {
 # --- Plugin groups ---------------------------------------------------------
 
 $PLUGINS_ESSENTIAL = @(
-    "everything-claude-code@everything-claude-code"
+    "andrej-karpathy-skills@karpathy-skills"
     "superpowers@claude-plugins-official"
     "context7@claude-plugins-official"
     "commit-commands@claude-plugins-official"
@@ -177,6 +177,10 @@ $PLUGINS_ESSENTIAL = @(
     "frontend-design@claude-plugins-official"
     "example-skills@anthropic-agent-skills"
     "github@claude-plugins-official"
+)
+
+$PLUGINS_OPTIONAL = @(
+    "everything-claude-code@everything-claude-code"
 )
 
 $PLUGINS_CLAUDE_MEM = @(
@@ -209,6 +213,7 @@ $MARKETPLACE_LIST = @(
     @{ Name = "claude-health"; Repo = "tw93/claude-health" }
     @{ Name = "pua-skills"; Repo = "tanweai/pua" }
     @{ Name = "openai-codex"; Repo = "openai/codex-plugin-cc" }
+    @{ Name = "karpathy-skills"; Repo = "forrestchang/andrej-karpathy-skills" }
 )
 
 # --- Interactive menu ------------------------------------------------------
@@ -233,32 +238,35 @@ function Show-InteractiveMenu {
             @{ Label = "adversarial-review"; Desc = "Cross-model adversarial review (poteto/noodle)"; Default = $true; Id = "review-adversarial" }
             @{ Label = "Codex CLI"; Desc = "Codex adversarial review (openai/codex)"; Default = $false; Id = "review-codex" }
         )}
-        @{ Label = "Skills"; Hint = ""; Items = @(
-            @{ Label = "paper-reading";   Desc = "Research paper summarization";      Default = $true;  Id = "skill-paper-reading" }
-            @{ Label = "humanizer";       Desc = "Remove AI writing patterns (English, blader)"; Default = $true; Id = "skill-humanizer" }
-            @{ Label = "humanizer-zh";    Desc = "Remove AI writing patterns (Chinese, op7418)"; Default = $false; Id = "skill-humanizer-zh" }
-            @{ Label = "update-config";   Desc = "Configure Claude Code via settings.json"; Default = $true; Id = "skill-update-config" }
-        )}
-        @{ Label = "Plugins - Official"; Hint = ""; Items = @(
-            @{ Label = "everything-claude-code"; Desc = "TDD, security, database, Go/Python/Spring Boot"; Default = $true; Id = "plug-everything-claude-code" }
+        @{ Label = "Workflow"; Hint = "planning, iteration, code quality, meta-config"; Items = @(
+            @{ Label = "andrej-karpathy-skills"; Desc = "Karpathy coding guidelines (Think-First, Simplicity, Surgical)"; Default = $true; Id = "plug-andrej-karpathy-skills" }
             @{ Label = "superpowers";     Desc = "Planning, brainstorming, TDD, debugging"; Default = $true; Id = "plug-superpowers" }
-            @{ Label = "context7";        Desc = "Real-time library documentation";   Default = $true;  Id = "plug-context7" }
-            @{ Label = "commit-commands"; Desc = "git commit / push / PR workflow";   Default = $true;  Id = "plug-commit-commands" }
-            @{ Label = "document-skills"; Desc = "Document processing (PDF, DOCX, PPTX, XLSX)"; Default = $true; Id = "plug-document-skills" }
-            @{ Label = "playwright";      Desc = "Browser automation & E2E testing";  Default = $true;  Id = "plug-playwright" }
             @{ Label = "feature-dev";     Desc = "Guided feature development";        Default = $true;  Id = "plug-feature-dev" }
-            @{ Label = "code-simplifier"; Desc = "Code simplification & cleanup";     Default = $true;  Id = "plug-code-simplifier" }
             @{ Label = "ralph-loop";      Desc = "Automated iteration loop";          Default = $true;  Id = "plug-ralph-loop" }
-            @{ Label = "frontend-design"; Desc = "Frontend UI design";                Default = $true;  Id = "plug-frontend-design" }
-            @{ Label = "example-skills";  Desc = "Example skills collection";         Default = $true;  Id = "plug-example-skills" }
-            @{ Label = "github";          Desc = "GitHub integration";                Default = $true;  Id = "plug-github" }
+            @{ Label = "commit-commands"; Desc = "git commit / push / PR workflow";   Default = $true;  Id = "plug-commit-commands" }
+            @{ Label = "code-simplifier"; Desc = "Code simplification & cleanup";     Default = $true;  Id = "plug-code-simplifier" }
+            @{ Label = "everything-claude-code"; Desc = "TDD, security, database, Go/Python/Spring Boot"; Default = $false; Id = "plug-everything-claude-code" }
+            @{ Label = "update-config";   Desc = "Configure Claude Code via settings.json (skill)"; Default = $true; Id = "skill-update-config" }
         )}
-        @{ Label = "Plugins - Community"; Hint = ""; Items = @(
+        @{ Label = "Integrations"; Hint = "external tools & services"; Items = @(
+            @{ Label = "context7";        Desc = "Real-time library documentation";   Default = $true;  Id = "plug-context7" }
+            @{ Label = "github";          Desc = "GitHub integration (issues, PRs, workflows)"; Default = $true;  Id = "plug-github" }
+            @{ Label = "playwright";      Desc = "Browser automation & E2E testing";  Default = $true;  Id = "plug-playwright" }
+        )}
+        @{ Label = "Design & Content"; Hint = "documents, UI, creative artifacts, humanization"; Items = @(
+            @{ Label = "document-skills"; Desc = "Document processing (PDF, DOCX, PPTX, XLSX)"; Default = $true; Id = "plug-document-skills" }
+            @{ Label = "example-skills";  Desc = "Frontend/design/canvas/algorithmic-art skills"; Default = $true;  Id = "plug-example-skills" }
+            @{ Label = "frontend-design"; Desc = "Frontend UI design";                Default = $true;  Id = "plug-frontend-design" }
+            @{ Label = "humanizer";       Desc = "Remove AI writing patterns (English, blader) (skill)"; Default = $true; Id = "skill-humanizer" }
+            @{ Label = "humanizer-zh";    Desc = "Remove AI writing patterns (Chinese, op7418) (skill)"; Default = $false; Id = "skill-humanizer-zh" }
+        )}
+        @{ Label = "Memory & Lifestyle"; Hint = "session memory and personal productivity"; Items = @(
             @{ Label = "claude-mem";      Desc = "Cross-session memory (~3k tokens/session)"; Default = $false; Id = "plug-claude-mem" }
             @{ Label = "claude-health";   Desc = "Health check & wellness dashboard"; Default = $false; Id = "plug-claude-health" }
             @{ Label = "PUA";             Desc = "AI agent productivity booster (pua, pua-en, pua-ja)"; Default = $false; Id = "plug-pua" }
         )}
-        @{ Label = "Academic Research"; Hint = "plugins + DeepXiv skills from github.com/DeepXiv/deepxiv_sdk"; Items = @(
+        @{ Label = "Academic Research"; Hint = "training/inference plugins + paper-reading & DeepXiv skills"; Items = @(
+            @{ Label = "paper-reading";   Desc = "Research paper summarization (skill)"; Default = $true; Id = "skill-paper-reading" }
             @{ Label = "tokenization";    Desc = "Tokenizer training & usage";        Default = $false; Id = "plug-tokenization" }
             @{ Label = "fine-tuning";     Desc = "Model fine-tuning";                 Default = $false; Id = "plug-fine-tuning" }
             @{ Label = "post-training";   Desc = "Post-training (RLHF, DPO, GRPO)";  Default = $false; Id = "plug-post-training" }
@@ -323,7 +331,7 @@ function Show-InteractiveMenu {
             Write-Host "  $(Get-SourceVersion)" -ForegroundColor White
             Write-Host "  =========================================" -ForegroundColor White
             Write-Host ""
-            Write-Host "  " -NoNewline; Write-Host "Up/Down move  Enter open  a=all n=none d=defaults q=quit" -ForegroundColor DarkGray
+            Write-Host "  " -NoNewline; Write-Host "Up/Down move  Enter/Right open sub-menu  a=all n=none d=defaults q=quit" -ForegroundColor DarkGray
             Write-Host ""
 
             for ($g = 0; $g -lt $numGroups; $g++) {
@@ -367,11 +375,14 @@ function Show-InteractiveMenu {
             # Check submit first
             if ($cursor -eq $submitIndex -and ($key.Key -eq [ConsoleKey]::Enter -or $key.Key -eq [ConsoleKey]::Spacebar)) { break }
 
+            # RightArrow opens a group's sub-menu, same as Enter on a group row.
+            # Enter on the Submit row commits; RightArrow on Submit does nothing.
+            $openSubMenu = ($key.Key -eq [ConsoleKey]::Enter -or $key.Key -eq [ConsoleKey]::RightArrow) -and $cursor -lt $numGroups
             switch ($key.Key) {
                 ([ConsoleKey]::UpArrow)   { if ($cursor -gt 0) { $cursor-- } }
                 ([ConsoleKey]::DownArrow) { if ($cursor -lt $submitIndex) { $cursor++ } }
-                ([ConsoleKey]::Enter) {
-                    if ($cursor -lt $numGroups) {
+                { $_ -eq [ConsoleKey]::Enter -or $_ -eq [ConsoleKey]::RightArrow } {
+                    if ($openSubMenu) {
                         # Enter sub-menu
                         $subG = $cursor
                         $subItems = $groups[$subG].Items
@@ -386,7 +397,7 @@ function Show-InteractiveMenu {
                             if ($groups[$subG].Hint) { Write-Host "  ($($groups[$subG].Hint))" -ForegroundColor DarkGray } else { Write-Host "" }
                             Write-Host "  =========================================" -ForegroundColor White
                             Write-Host ""
-                            Write-Host "  " -NoNewline; Write-Host "Up/Down move  Space toggle  Enter/Esc back" -ForegroundColor DarkGray
+                            Write-Host "  " -NoNewline; Write-Host "Up/Down move  Space toggle  Left/Esc back  Enter on [Back] to return" -ForegroundColor DarkGray
                             Write-Host ""
 
                             for ($j = 0; $j -lt $subN; $j++) {
@@ -427,7 +438,8 @@ function Show-InteractiveMenu {
                                         Enforce-ReviewMutex $absIdx
                                     }
                                 }
-                                ([ConsoleKey]::Escape) { $inSub = $false }
+                                ([ConsoleKey]::Escape)   { $inSub = $false }
+                                ([ConsoleKey]::LeftArrow) { $inSub = $false }
                                 default {
                                     switch ($subKey.KeyChar) {
                                         'a' { for ($j = $groupStart[$subG]; $j -le $groupEnd[$subG]; $j++) { $selected[$j] = $true }; if ($subG -eq 2) { for ($j = $groupStart[2]; $j -le $groupEnd[2]; $j++) { if ($allItems[$j].Id -eq "review-codex") { $selected[$j] = $false } } } }
@@ -460,6 +472,7 @@ function Show-InteractiveMenu {
 
     # Plugin ID -> package mapping
     $pluginMap = @{
+        "plug-andrej-karpathy-skills" = "andrej-karpathy-skills@karpathy-skills"
         "plug-everything-claude-code" = "everything-claude-code@everything-claude-code"
         "plug-superpowers" = "superpowers@claude-plugins-official"
         "plug-context7" = "context7@claude-plugins-official"
@@ -567,16 +580,74 @@ function Install-ClaudeMd {
     }
 }
 
+function Get-EffectiveSelectedPlugins {
+    param(
+        [string[]]$SelectedPluginsList = @(),
+        [string[]]$Groups = @()
+    )
+    $pkgs = @()
+    if ($SelectedPluginsList.Count -gt 0) { $pkgs += $SelectedPluginsList }
+    foreach ($g in $Groups) {
+        switch ($g) {
+            "essential" { $pkgs += $PLUGINS_ESSENTIAL }
+            "claude-mem" { $pkgs += $PLUGINS_CLAUDE_MEM }
+            "ai-research" { $pkgs += $PLUGINS_AI_RESEARCH }
+            "health" { $pkgs += $PLUGINS_HEALTH }
+            "pua" { $pkgs += $PLUGINS_PUA }
+            "all" { $pkgs += $PLUGINS_ESSENTIAL + $PLUGINS_OPTIONAL + $PLUGINS_CLAUDE_MEM + $PLUGINS_AI_RESEARCH + $PLUGINS_HEALTH + $PLUGINS_PUA }
+        }
+    }
+    return @($pkgs | Select-Object -Unique)
+}
+
 function Install-Settings {
+    param(
+        [bool]$InstallPlugins = $false,
+        [string[]]$SelectedPluginsList = @(),
+        [string[]]$PluginGroups = @()
+    )
     Write-Info "Installing settings.json..."
     $target = Join-Path $CLAUDE_DIR "settings.json"
     $source = Join-Path $SCRIPT_DIR "settings.json"
+
+    $effectiveSelected = @()
+    if ($InstallPlugins) {
+        $effectiveSelected = Get-EffectiveSelectedPlugins -SelectedPluginsList $SelectedPluginsList -Groups $PluginGroups
+    }
+    $selSet = @{}
+    foreach ($p in $effectiveSelected) { $selSet[$p] = $true }
 
     if (-not (Test-Path $target)) {
         if ($DryRun) {
             Write-Info "Would copy: settings.json -> $target"
         } else {
             Copy-Item $source $target -Force
+            if ($InstallPlugins) {
+                try {
+                    Set-StrictMode -Off
+                    $obj = Get-Content $target -Raw | ConvertFrom-Json
+                    # Fresh install: catalogue = source keys ∪ selection so plugins
+                    # picked in the menu that aren't declared in the shipped
+                    # settings.json (codex, health, pua) still land as true.
+                    $filtered = [ordered]@{}
+                    $seen = @{}
+                    if ($obj.enabledPlugins) {
+                        foreach ($prop in $obj.enabledPlugins.PSObject.Properties) {
+                            $filtered[$prop.Name] = [bool]$selSet[$prop.Name]
+                            $seen[$prop.Name] = $true
+                        }
+                    }
+                    foreach ($k in $selSet.Keys) {
+                        if (-not $seen.ContainsKey($k)) { $filtered[$k] = $true }
+                    }
+                    $obj.enabledPlugins = [PSCustomObject]$filtered
+                    $obj | ConvertTo-Json -Depth 10 | Set-Content $target -Encoding UTF8
+                    Set-StrictMode -Version Latest
+                } catch {
+                    Set-StrictMode -Version Latest
+                    Write-Warn "Could not apply plugin selection filter: $_"
+                }
+            }
             Write-Ok "settings.json installed (new)"
         }
         return
@@ -587,7 +658,11 @@ function Install-Settings {
         Write-Info "Would smart-merge settings.json"
         Write-Info "  - env: incoming as defaults, existing overrides"
         Write-Info "  - permissions.allow: union of arrays"
-        Write-Info "  - enabledPlugins: union (new plugins added, existing preserved)"
+        if ($InstallPlugins) {
+            Write-Info "  - enabledPlugins: selection-aware rebuild (unselected known plugins disabled, unknown plugins preserved)"
+        } else {
+            Write-Info "  - enabledPlugins: union (existing preserved on conflict)"
+        }
         Write-Info "  - hooks.SessionStart: deduplicated by matcher"
         Write-Info "  - statusLine: incoming takes priority"
         return
@@ -629,8 +704,37 @@ function Install-Settings {
         $overAllow = if ($existing.permissions -and $existing.permissions.allow) { @($existing.permissions.allow) } else { @() }
         $mergedAllow = @($baseAllow + $overAllow | Select-Object -Unique)
 
-        # enabledPlugins: union (new plugins added, existing preserved)
-        $mergedPlugins = & $mergeHt $existing.enabledPlugins $incoming.enabledPlugins
+        # enabledPlugins: if plugins were interacted with this run, apply the selection
+        # filter to the catalogue (source keys ∪ selected keys — so plugins picked in
+        # the menu that aren't declared in the shipped settings.json, e.g. codex,
+        # health, pua, still land as true). User-added keys that exist only in
+        # $existing (outside our catalogue) are preserved verbatim so the installer
+        # never silently disables third-party plugins.
+        # If plugins were not interacted with, fall back to union merge with existing
+        # winning on conflict (per the documented promise).
+        if ($InstallPlugins) {
+            $mergedPlugins = [ordered]@{}
+            $catalogueKeys = @{}
+            if ($incoming.enabledPlugins) {
+                foreach ($prop in $incoming.enabledPlugins.PSObject.Properties) {
+                    $catalogueKeys[$prop.Name] = $true
+                }
+            }
+            foreach ($k in $selSet.Keys) { $catalogueKeys[$k] = $true }
+            foreach ($k in $catalogueKeys.Keys) {
+                $mergedPlugins[$k] = [bool]$selSet[$k]
+            }
+            if ($existing.enabledPlugins) {
+                foreach ($prop in $existing.enabledPlugins.PSObject.Properties) {
+                    if (-not $catalogueKeys.ContainsKey($prop.Name)) {
+                        $mergedPlugins[$prop.Name] = $prop.Value
+                    }
+                }
+            }
+        } else {
+            # Swapped order: $incoming first, $existing second → existing wins on conflict.
+            $mergedPlugins = & $mergeHt $incoming.enabledPlugins $existing.enabledPlugins
+        }
 
         # hooks.SessionStart: deduplicate by matcher (last wins)
         $sessionHooks = [ordered]@{}
@@ -1036,7 +1140,7 @@ function Install-Plugins {
             "ai-research" { $plugins += $PLUGINS_AI_RESEARCH }
             "health" { $plugins += $PLUGINS_HEALTH }
             "pua" { $plugins += $PLUGINS_PUA }
-            "all" { $plugins += $PLUGINS_ESSENTIAL + $PLUGINS_CLAUDE_MEM + $PLUGINS_AI_RESEARCH + $PLUGINS_HEALTH + $PLUGINS_PUA }
+            "all" { $plugins += $PLUGINS_ESSENTIAL + $PLUGINS_OPTIONAL + $PLUGINS_CLAUDE_MEM + $PLUGINS_AI_RESEARCH + $PLUGINS_HEALTH + $PLUGINS_PUA }
         }
     }
 
@@ -1170,7 +1274,7 @@ function Invoke-Uninstall {
 
     $claudeCmd = Get-Command claude -ErrorAction SilentlyContinue
     if ($claudeCmd) {
-        $allPlugins = $PLUGINS_ESSENTIAL + $PLUGINS_CLAUDE_MEM + $PLUGINS_AI_RESEARCH + $PLUGINS_HEALTH + $PLUGINS_PUA
+        $allPlugins = $PLUGINS_ESSENTIAL + $PLUGINS_OPTIONAL + $PLUGINS_CLAUDE_MEM + $PLUGINS_AI_RESEARCH + $PLUGINS_HEALTH + $PLUGINS_PUA
         foreach ($entry in $allPlugins) {
             $pluginName = ($entry -split '@')[0]
             & claude plugin uninstall $entry 2>$null
@@ -1358,7 +1462,7 @@ function Main {
     }
 
     if ($doClaudeMd) { Install-ClaudeMd -ReviewAdversarial $reviewAdversarial -ReviewCodex $reviewCodex }
-    if ($doSettings) { Install-Settings }
+    if ($doSettings) { Install-Settings -InstallPlugins $doPlugins -SelectedPluginsList $selectedPlugins -PluginGroups $pluginGroups }
     if ($doRules) { Install-Rules -Langs $ruleLangs -LangsExplicit $ruleLangsExplicit }
     if ($doSkills) { Install-Skills -SelectedSkills $selectedSkills }
     if ($doLessons) { Install-Lessons }

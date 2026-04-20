@@ -1,5 +1,39 @@
 # 更新日志
 
+## [2.5.0] - 2026-04-21
+
+### 新特性
+- **新增插件 `andrej-karpathy-skills`**（marketplace `karpathy-skills`，仓库 `forrestchang/andrej-karpathy-skills`），默认启用。提供 Karpathy 风格的编码行为指引（Think-Before-Coding、Simplicity-First、Surgical Changes、Goal-Driven Execution），用于降低常见 LLM 编码失误。
+- **`everything-claude-code` 改为默认关闭**。从 essentials 组移动到新的 optional 组，仅在使用 `--all` 或手动勾选时安装。
+- **安装器尊重未选中状态**：运行安装器时，未在菜单中勾选但本地 `settings.json` 已有（或属于我方插件目录）的插件，会在 `enabledPlugins` 中写为 `false`。此前由于 merge 逻辑偏好已有值，未选中的插件可能仍处于启用状态。
+- **菜单重新分组**：取消旧的 "Plugins — Official" / "Plugins — Community" / "Skills" 分组，按用途重排。插件与 skill 不再按来源区分，而是按用途并列展示：
+  - **Workflow**（8）：andrej-karpathy-skills、superpowers、feature-dev、ralph-loop、commit-commands、code-simplifier、everything-claude-code、`update-config`（skill）
+  - **Integrations**（3）：context7、github、playwright
+  - **Design & Content**（5）：document-skills、example-skills、frontend-design、`humanizer`（skill）、`humanizer-zh`（skill）
+  - **Memory & Lifestyle**（3）：claude-mem、claude-health、PUA
+  - **Academic Research**（10）：`paper-reading`（skill）+ 6 个 AI-Research 插件 + 3 个 DeepXiv skill（原 9 项）
+  分组标签不再带冗余的 "Plugins —" 前缀。
+
+### 设计理由
+- Karpathy 的指引偏通用，适合大多数编码会话，故纳入 essentials。而 everything-claude-code 覆盖面广且风格强烈，改为默认关闭以减少与用户自选标准的冲突。
+- 新的 enabledPlugins 规则让交互式菜单具有"最终决定权"：选中即启用，未选中即关闭。本地 `settings.json` 中我方目录之外的键仍然保留，避免误删用户自行添加的插件。
+
+### Bug 修复（复审后）
+- **`enabledPlugins` catalogue 现在包含当前选择**。此前菜单里选中但未在 shipped `settings.json` 中声明的插件（`codex@openai-codex`、`health@claude-health`、`pua@pua-skills`）会被 `claude plugin install` 装好但被 filter 丢掉——Claude Code 视其为未启用。现在 catalogue = base keys ∪ `$selected`。
+- **Fallback 合并顺序纠正**。未交互插件时的 union 合并改为 existing 值胜出（jq 里 `$base * $over`，PowerShell 里 `$mergeHt $incoming $existing`）。此前运算对象写反，会让 v2.4.x 的用户在"只升级不动插件"时把 `everything-claude-code: true` 静默翻成 `false`。
+- **`install_jq` 提到 `install_settings` 顶部**。无 jq 的机器上，fresh install 且保留 statusline+lessons 时不再静默跳过插件 filter。
+- **Dry-run 横幅文案与实际语义一致**。此前 `--dry-run` 一律打印 "enabledPlugins: union (new plugins added, existing preserved)"，哪怕真跑时走的是 selection-aware rebuild；现在按 `$INSTALL_PLUGINS` 分支显示。
+
+### Windows 菜单对齐
+- install.ps1 现在支持 **→（右方向键）** 打开分组子菜单、**←（左方向键）** 返回主菜单，与 install.sh 对齐。两脚本提示文案同步更新。
+- README 列出完整快捷键：主菜单（↑↓ / Enter 或 → / q）、子菜单（↑↓ / Space / ← 或 Esc）、快捷（a / n / d）。
+
+### 注意事项
+- 在 `install.sh` 和 `install.ps1` 中新增 `PLUGINS_OPTIONAL` 组，`--all` 模式会同时展开 `PLUGINS_ESSENTIAL + PLUGINS_OPTIONAL`。
+- 选择感知的 enabledPlugins 合并仅在安装器处理了插件（`INSTALL_PLUGINS=true`）时生效；若本次只安装 `settings.json` 而未进入插件选择，沿用 fallback union 合并以保留现状。
+- 已有用户：之前启用的插件，只有在菜单中再次勾选才会保持启用。建议跑一遍交互式菜单复核。
+- README.md 与 README.zh-CN.md 大幅精简（从 349 → 约 195 行）：与 `plugins/README.md` 重复的逐插件细节被合并，同时保留交互菜单对应的完整链接与默认值表格。
+
 ## [2.4.0] - 2026-04-21
 
 ### 新特性
